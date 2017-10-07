@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layout"
+    android:layout_width="fill_parent"
+    android:layout_height="64dp"
+    android:padding="10dp"
+    android:layout_alignParentEnd="true"
+    android:layout_centerVertical="true"
+    android:orientation="horizontal"
+    android:weightSum="10">
+    <RelativeLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="6">
+
+        <ImageView
+            android:id="@+id/routeIcon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="2dp"
+            android:src="@mipmap/ic_launcher" />
+        <TextView
+            android:id="@+id/routeName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@+id/routeIcon"
+            android:layout_marginTop="6dp"
+            android:text="Elisedal -> Valand"
+            android:textColor="#000"
+            android:textSize="13dp" />
+        <TextView
+            android:id="@+id/routeTimeLeft"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@+id/routeIcon"
+            android:layout_below="@id/routeName"
+            android:textColor="#000"
+            android:textSize="13dp"
+            android:text="4min" />
+    </RelativeLayout>
+    <RelativeLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="4">
+        <ImageButton
+            android:id="@+id/previousButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toLeftOf="@+id/flipButton"
+            android:src="@drawable/ic_previous_24dp"/>
+        <ImageButton
+            android:id="@+id/flipButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toLeftOf="@+id/nextButton"
+            android:src="@drawable/ic_flip_24dp"/>
+        <ImageButton
+            android:id="@+id/nextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:src="@drawable/ic_next_24dp"/>
+    </RelativeLayout>
+</LinearLayout>
