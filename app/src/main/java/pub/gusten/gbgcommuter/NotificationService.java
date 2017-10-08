@@ -11,16 +11,15 @@ import android.os.IBinder;
 import android.util.Log;
 import android.widget.RemoteViews;
 
-/**
- * Created by Gusten on 2017-10-07.
- */
-
 public class NotificationService extends Service {
     private NotificationManager notificationManager;
     private final int NOTIFICATION_ID = R.integer.notification_id;
     private String NOTIFICATION_CHANNEL_ID;
     private NetworkManager networkManager;
 
+    private PendingIntent prevPendingIntent;
+    private PendingIntent nextPendingIntent;
+    private PendingIntent flipPendingIntent;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -38,6 +37,31 @@ public class NotificationService extends Service {
     @Override
     public void onCreate() {
         networkManager = new NetworkManager(this);
+
+        // Intent for selecting previous route
+        Intent prevIntent = new Intent(this, NotificationService.class);
+        prevPendingIntent = PendingIntent.getService(
+                this,
+                0,
+                prevIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT
+        );
+        // Intent for selecting next route
+        Intent nextIntent = new Intent(this, NotificationService.class);
+        prevPendingIntent = PendingIntent.getService(
+                this,
+                0,
+                nextIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT
+        );
+        // Intent for selecting flipping route
+        Intent flipIntent = new Intent(this, NotificationService.class);
+        prevPendingIntent = PendingIntent.getService(
+                this,
+                0,
+                flipIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT
+        );
     }
 
     @Override
@@ -57,21 +81,12 @@ public class NotificationService extends Service {
     }
 
     public void showNotification(String routeName, String timeTilDeparture) {
-        Intent updateNotificationIntent = new Intent(this, NotificationService.class);
-
-        PendingIntent pendingIntent = PendingIntent.getService(
-                this,
-                0,
-                updateNotificationIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT
-        );
-
         RemoteViews contentView = new RemoteViews(getPackageName(), R.layout.custom_notification);
         contentView.setTextViewText(R.id.notification_route, routeName);
         contentView.setTextViewText(R.id.notification_timeTilDeparture, timeTilDeparture);
-        contentView.setOnClickPendingIntent(R.id.notification_prevBtn, pendingIntent);
-        contentView.setOnClickPendingIntent(R.id.notification_nextBtn, pendingIntent);
-        contentView.setOnClickPendingIntent(R.id.notification_flipBtn, pendingIntent);
+        contentView.setOnClickPendingIntent(R.id.notification_prevBtn, prevPendingIntent);
+        contentView.setOnClickPendingIntent(R.id.notification_nextBtn, nextPendingIntent);
+        contentView.setOnClickPendingIntent(R.id.notification_flipBtn, flipPendingIntent);
 
         Notification notification = new Notification.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_train_24dp)
