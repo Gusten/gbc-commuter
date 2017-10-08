@@ -31,7 +31,8 @@ public class NetworkManager {
     private String accessToken;
     private long expiresAt;
     private Calendar calendar;
-    private SimpleDateFormat defaultFormat;
+    private SimpleDateFormat dateFormat;
+    private SimpleDateFormat timeFormat;
 
     public NetworkManager(Context context) {
         this.context = context;
@@ -40,7 +41,8 @@ public class NetworkManager {
         authStr = Base64.encodeToString(authStr.getBytes(), Base64.DEFAULT);
         fetchAccessToken();
         calendar = Calendar.getInstance();
-        defaultFormat = new SimpleDateFormat("yyyy-MM-dd");
+        dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        timeFormat = new SimpleDateFormat("HH:mm");
     }
 
     private void fetchAccessToken() {
@@ -53,7 +55,7 @@ public class NetworkManager {
                 @Override
                 public void onResponse(String response) {
                     try {
-                        JSONObject res = new JSONObject(response.substring(0));
+                        JSONObject res = new JSONObject(response);
                         accessToken = res.getString("access_token");
                         expiresAt = System.currentTimeMillis()/1000 + res.getLong("expires_in");
                         fetchDepartures("9021014002210000");
@@ -93,26 +95,33 @@ public class NetworkManager {
     }
 
     public void fetchDepartures(String stopId) {
-        String requestQuery = "?id=" + stopId + "&date=" + defaultFormat.format(calendar.getTime()) + "&time=18:59&format=json";
-        // URLEncoder.encode("input", "utf-8");
+        String requestQuery = "?id=" + stopId +
+                              "&date=" + dateFormat.format(calendar.getTime()) +
+                              "&time=" + timeFormat.format(calendar.getTime()) +
+                              "&format=json";
+        requestQuery = URLEncoder.encode(requestQuery, "utf-8");
 
         RequestQueue queue = Volley.newRequestQueue(context);
 
         StringRequest stringRequest = new StringRequest(
-                Request.Method.GET,
-                departureUrl + requestQuery,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        Log.i("NetworkManager", response.substring(0));
+            Request.Method.GET,
+            departureUrl + requestQuery,
+            new Response.Listener<String>() {
+                @Override
+                public void onResponse(String response) {
+                    try {
+                        JSONObject departures = new JSONObject(response);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
                     }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
+                }
+            },
+            new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
 
-                    }
-                }) {
+                }
+            }) {
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
                 Map<String, String> headers = new HashMap<>();
