@@ -1,4 +1,7 @@
 
+# Ignore API keys
+app/src/main/res/values/apikeys.xml
+
 # Created by https://www.gitignore.io/api/gradle,windows,android,androidstudio
 
 ### Android ###

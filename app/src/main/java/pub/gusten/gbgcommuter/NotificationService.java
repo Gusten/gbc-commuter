@@ -42,7 +42,6 @@ public class NotificationService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.i("LocalService", "Test");
         NOTIFICATION_CHANNEL_ID = getString(R.string.notification_channel_id);
         notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
         NotificationChannel mChannel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, "testChannel", NotificationManager.IMPORTANCE_LOW);

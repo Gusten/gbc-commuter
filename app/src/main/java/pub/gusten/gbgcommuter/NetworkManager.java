@@ -23,22 +23,22 @@ public class NetworkManager {
     private final String tokenUrl ="https://api.vasttrafik.se:443/token";
 
     private Context context;
+    private String authStr;
     private String accessToken;
     private long expiresAt;
 
     public NetworkManager(Context context) {
         this.context = context;
+        authStr = context.getResources().getString(R.string.vasttrafik_key) + ":"
+                + context.getResources().getString(R.string.vasttrafik_secret);
+        authStr = Base64.encodeToString(authStr.getBytes(), Base64.DEFAULT);
         fetchAccessToken();
+
     }
 
     private void fetchAccessToken() {
         RequestQueue queue = Volley.newRequestQueue(context);
 
-        String authStr = "";
-        authStr = Base64.encodeToString(authStr.getBytes(), Base64.DEFAULT);
-
-        Log.i("NetworkManager", authStr);
-        final String finalAuthStr = authStr;
         StringRequest stringRequest = new StringRequest(
             Request.Method.POST,
             tokenUrl,
@@ -63,7 +63,7 @@ public class NetworkManager {
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
                 Map<String, String> headers = new HashMap<>();
-                headers.put("Authorization", "Basic " + finalAuthStr);
+                headers.put("Authorization", "Basic " + authStr);
                 headers.put("Content-Type", "application/x-www-form-urlencoded");
                 return headers;
             }
