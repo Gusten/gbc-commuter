@@ -1,6 +1,8 @@
 package pub.gusten.gbgcommuter;
 
 import android.content.Context;
+import android.icu.text.SimpleDateFormat;
+import android.icu.util.Calendar;
 import android.util.Base64;
 import android.util.Log;
 
@@ -15,17 +17,21 @@ import com.android.volley.toolbox.Volley;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 
 public class NetworkManager {
 
-    private final String tokenUrl ="https://api.vasttrafik.se:443/token";
+    private final String tokenUrl = "https://api.vasttrafik.se:443/token";
+    private final String departureUrl = "https://api.vasttrafik.se/bin/rest.exe/v2/departureBoard";
 
     private Context context;
     private String authStr;
     private String accessToken;
     private long expiresAt;
+    private Calendar calendar;
+    private SimpleDateFormat defaultFormat;
 
     public NetworkManager(Context context) {
         this.context = context;
@@ -33,7 +39,8 @@ public class NetworkManager {
                 + context.getResources().getString(R.string.vasttrafik_secret);
         authStr = Base64.encodeToString(authStr.getBytes(), Base64.DEFAULT);
         fetchAccessToken();
-
+        calendar = Calendar.getInstance();
+        defaultFormat = new SimpleDateFormat("yyyy-MM-dd");
     }
 
     private void fetchAccessToken() {
@@ -49,6 +56,7 @@ public class NetworkManager {
                         JSONObject res = new JSONObject(response.substring(0));
                         accessToken = res.getString("access_token");
                         expiresAt = System.currentTimeMillis()/1000 + res.getLong("expires_in");
+                        fetchDepartures("9021014002210000");
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -79,6 +87,37 @@ public class NetworkManager {
                 params.put("grant_type", "client_credentials");
                 params.put("scope", "1");
                 return params;
+            }
+        };
+        queue.add(stringRequest);
+    }
+
+    public void fetchDepartures(String stopId) {
+        String requestQuery = "?id=" + stopId + "&date=" + defaultFormat.format(calendar.getTime()) + "&time=18:59&format=json";
+        // URLEncoder.encode("input", "utf-8");
+
+        RequestQueue queue = Volley.newRequestQueue(context);
+
+        StringRequest stringRequest = new StringRequest(
+                Request.Method.GET,
+                departureUrl + requestQuery,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        Log.i("NetworkManager", response.substring(0));
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+
+                    }
+                }) {
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String> headers = new HashMap<>();
+                headers.put("Authorization", "Bearer " + accessToken);
+                return headers;
             }
         };
         queue.add(stringRequest);
