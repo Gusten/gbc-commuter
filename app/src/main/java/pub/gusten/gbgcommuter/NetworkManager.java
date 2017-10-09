@@ -14,11 +14,15 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class NetworkManager {
@@ -61,6 +65,8 @@ public class NetworkManager {
                         fetchDepartures("9021014002210000");
                     } catch (JSONException e) {
                         e.printStackTrace();
+                    } catch (UnsupportedEncodingException e) {
+                        e.printStackTrace();
                     }
                 }
             },
@@ -94,12 +100,11 @@ public class NetworkManager {
         queue.add(stringRequest);
     }
 
-    public void fetchDepartures(String stopId) {
+    public void fetchDepartures(String stopId) throws UnsupportedEncodingException {
         String requestQuery = "?id=" + stopId +
                               "&date=" + dateFormat.format(calendar.getTime()) +
                               "&time=" + timeFormat.format(calendar.getTime()) +
                               "&format=json";
-        requestQuery = URLEncoder.encode(requestQuery, "utf-8");
 
         RequestQueue queue = Volley.newRequestQueue(context);
 
@@ -111,6 +116,12 @@ public class NetworkManager {
                 public void onResponse(String response) {
                     try {
                         JSONObject departures = new JSONObject(response);
+                        // JSONArray tmp = departures.getJSONObject("DepartureBoard").getJSONArray("Departure");
+                        // List<Departure> test = new ArrayList<>();
+                        // for (int i = 0; i < tmp.length(); i++) {
+                        //     Departure testDep = new Departure(tmp.getJSONObject(i));
+                        //     Log.i("NetworkManager", testDep.toString());
+                        // }
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
