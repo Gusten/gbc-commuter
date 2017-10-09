@@ -1,10 +1,11 @@
-package pub.gusten.gbgcommuter.services;
+package pub.gusten.gbgcommuter;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
 import pub.gusten.gbgcommuter.services.NotificationService;
+import pub.gusten.gbgcommuter.services.TrackerService;
 
 public class AutostartHandler extends BroadcastReceiver {
 

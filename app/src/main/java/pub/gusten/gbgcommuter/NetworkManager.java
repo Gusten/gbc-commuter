@@ -1,4 +1,4 @@
-package pub.gusten.gbgcommuter.services;
+package pub.gusten.gbgcommuter;
 
 import android.content.Context;
 import android.icu.text.SimpleDateFormat;
@@ -30,7 +30,7 @@ import pub.gusten.gbgcommuter.models.Departure;
 
 public class NetworkManager {
 
-    interface DeparturesRequest {
+    public interface DeparturesRequest {
         void onRequestCompleted(List<Departure> departures);
         void onRequestFailed();
     }

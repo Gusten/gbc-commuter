@@ -95,6 +95,7 @@ public class NotificationService extends Service {
         Notification notification = new Notification.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_train_24dp)
             .setContent(contentView)
+            .setVisibility(Notification.VISIBILITY_PUBLIC)
             .build();
 
         startForeground(NOTIFICATION_ID, notification);

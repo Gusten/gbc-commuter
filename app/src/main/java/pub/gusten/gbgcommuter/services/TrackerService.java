@@ -16,6 +16,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
+import pub.gusten.gbgcommuter.NetworkManager;
 import pub.gusten.gbgcommuter.models.Departure;
 import pub.gusten.gbgcommuter.models.NotificationAction;
 import pub.gusten.gbgcommuter.models.TrackedRoute;
