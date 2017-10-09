@@ -14,23 +14,11 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import pub.gusten.gbgcommuter.services.NotificationService;
+import pub.gusten.gbgcommuter.services.TrackerService;
+
 public class MainActivity extends AppCompatActivity {
 
-    private NotificationService notificationService;
-    private ServiceConnection serviceConnection = new ServiceConnection() {
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            Log.i("MainActivity", "Service disconnected");
-        }
-
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            Log.i("MainActivity", "Service connected");
-            NotificationService.LocalBinder mLocalBinder = (NotificationService.LocalBinder)service;
-            notificationService = mLocalBinder.getService();
-            notificationService.showNotification("Whopdidoo", "5min");
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,14 +35,7 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
-        startService(new Intent(this, NotificationService.class));
-        bindService(new Intent(this, NotificationService.class), serviceConnection, BIND_AUTO_CREATE);
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        unbindService(serviceConnection);
+        startService(new Intent(this, TrackerService.class));
     }
 
     @Override

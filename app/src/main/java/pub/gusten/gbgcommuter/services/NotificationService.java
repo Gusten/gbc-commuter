@@ -1,4 +1,4 @@
-package pub.gusten.gbgcommuter;
+package pub.gusten.gbgcommuter.services;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -8,19 +8,22 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
-import android.util.Log;
+import android.support.annotation.Nullable;
 import android.widget.RemoteViews;
+
+import pub.gusten.gbgcommuter.R;
+import pub.gusten.gbgcommuter.models.NotificationAction;
 
 public class NotificationService extends Service {
     private NotificationManager notificationManager;
     private final int NOTIFICATION_ID = R.integer.notification_id;
     private String NOTIFICATION_CHANNEL_ID;
-    private NetworkManager networkManager;
 
     private PendingIntent prevPendingIntent;
     private PendingIntent nextPendingIntent;
     private PendingIntent flipPendingIntent;
 
+    @Nullable
     @Override
     public IBinder onBind(Intent intent) {
         return mBinder;
@@ -36,10 +39,9 @@ public class NotificationService extends Service {
 
     @Override
     public void onCreate() {
-        networkManager = new NetworkManager(this);
-
         // Intent for selecting previous route
-        Intent prevIntent = new Intent(this, NotificationService.class);
+        Intent prevIntent = new Intent(this, TrackerService.class);
+        prevIntent.putExtra("action", NotificationAction.PREVIOUS);
         prevPendingIntent = PendingIntent.getService(
                 this,
                 0,
@@ -47,18 +49,20 @@ public class NotificationService extends Service {
                 PendingIntent.FLAG_UPDATE_CURRENT
         );
         // Intent for selecting next route
-        Intent nextIntent = new Intent(this, NotificationService.class);
-        prevPendingIntent = PendingIntent.getService(
+        Intent nextIntent = new Intent(this, TrackerService.class);
+        nextIntent.putExtra("action", NotificationAction.NEXT);
+        nextPendingIntent = PendingIntent.getService(
                 this,
-                0,
+                1,
                 nextIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT
         );
         // Intent for selecting flipping route
-        Intent flipIntent = new Intent(this, NotificationService.class);
-        prevPendingIntent = PendingIntent.getService(
+        Intent flipIntent = new Intent(this, TrackerService.class);
+        flipIntent.putExtra("action", NotificationAction.FLIP);
+        flipPendingIntent = PendingIntent.getService(
                 this,
-                0,
+                2,
                 flipIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT
         );
@@ -70,7 +74,6 @@ public class NotificationService extends Service {
         notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
         NotificationChannel mChannel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, "testChannel", NotificationManager.IMPORTANCE_LOW);
         notificationManager.createNotificationChannel(mChannel);
-        showNotification("Nothing to show here", "4min");
         return START_STICKY;
     }
 
@@ -80,10 +83,11 @@ public class NotificationService extends Service {
         notificationManager.cancel(NOTIFICATION_ID);
     }
 
-    public void showNotification(String routeName, String timeTilDeparture) {
+    public void showNotification(String routeName, String timeTilDeparture, String line) {
         RemoteViews contentView = new RemoteViews(getPackageName(), R.layout.custom_notification);
         contentView.setTextViewText(R.id.notification_route, routeName);
         contentView.setTextViewText(R.id.notification_timeTilDeparture, timeTilDeparture);
+        contentView.setTextViewText(R.id.notification_line, line);
         contentView.setOnClickPendingIntent(R.id.notification_prevBtn, prevPendingIntent);
         contentView.setOnClickPendingIntent(R.id.notification_nextBtn, nextPendingIntent);
         contentView.setOnClickPendingIntent(R.id.notification_flipBtn, flipPendingIntent);

@@ -1,4 +1,4 @@
-package pub.gusten.gbgcommuter;
+package pub.gusten.gbgcommuter.services;
 
 import android.content.Context;
 import android.icu.text.SimpleDateFormat;
@@ -25,7 +25,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import pub.gusten.gbgcommuter.R;
+import pub.gusten.gbgcommuter.models.Departure;
+
 public class NetworkManager {
+
+    interface DeparturesRequest {
+        void onRequestCompleted(List<Departure> departures);
+        void onRequestFailed();
+    }
 
     private final String tokenUrl = "https://api.vasttrafik.se:443/token";
     private final String departureUrl = "https://api.vasttrafik.se/bin/rest.exe/v2/departureBoard";
@@ -62,10 +70,7 @@ public class NetworkManager {
                         JSONObject res = new JSONObject(response);
                         accessToken = res.getString("access_token");
                         expiresAt = System.currentTimeMillis()/1000 + res.getLong("expires_in");
-                        fetchDepartures("9021014002210000");
                     } catch (JSONException e) {
-                        e.printStackTrace();
-                    } catch (UnsupportedEncodingException e) {
                         e.printStackTrace();
                     }
                 }
@@ -100,7 +105,7 @@ public class NetworkManager {
         queue.add(stringRequest);
     }
 
-    public void fetchDepartures(String stopId) throws UnsupportedEncodingException {
+    public void fetchDepartures(String stopId, final DeparturesRequest callback) throws UnsupportedEncodingException {
         String requestQuery = "?id=" + stopId +
                               "&date=" + dateFormat.format(calendar.getTime()) +
                               "&time=" + timeFormat.format(calendar.getTime()) +
@@ -115,22 +120,24 @@ public class NetworkManager {
                 @Override
                 public void onResponse(String response) {
                     try {
-                        JSONObject departures = new JSONObject(response);
-                        // JSONArray tmp = departures.getJSONObject("DepartureBoard").getJSONArray("Departure");
-                        // List<Departure> test = new ArrayList<>();
-                        // for (int i = 0; i < tmp.length(); i++) {
-                        //     Departure testDep = new Departure(tmp.getJSONObject(i));
-                        //     Log.i("NetworkManager", testDep.toString());
-                        // }
+                        List<Departure> departures = new ArrayList<>();
+                        JSONObject jsonObject = new JSONObject(response);
+                        JSONArray jsonArray = jsonObject.getJSONObject("DepartureBoard").getJSONArray("Departure");
+                        List<Departure> test = new ArrayList<>();
+                        for (int i = 0; i < jsonArray.length(); i++) {
+                            departures.add(new Departure(jsonArray.getJSONObject(i)));
+                        }
+                        callback.onRequestCompleted(departures);
                     } catch (JSONException e) {
                         e.printStackTrace();
+                        callback.onRequestFailed();
                     }
                 }
             },
             new Response.ErrorListener() {
                 @Override
                 public void onErrorResponse(VolleyError error) {
-
+                    callback.onRequestFailed();
                 }
             }) {
             @Override

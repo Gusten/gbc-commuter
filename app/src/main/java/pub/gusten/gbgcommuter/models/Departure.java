@@ -1,4 +1,4 @@
-package pub.gusten.gbgcommuter;
+package pub.gusten.gbgcommuter.models;
 
 import org.json.JSONException;
 import org.json.JSONObject;

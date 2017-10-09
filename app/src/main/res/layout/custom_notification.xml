@@ -13,30 +13,37 @@
         android:layout_height="match_parent"
         android:layout_weight="6">
 
-        <ImageView
-            android:id="@+id/notification_icon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="2dp"
-            android:src="@mipmap/ic_launcher" />
+        <TextView
+            android:id="@+id/notification_line"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginTop="2dp"
+            android:layout_marginLeft="2dp"
+            android:layout_marginBottom="2dp"
+            android:layout_marginRight="8dp"
+            android:gravity="center"
+            android:background="@color/colorPrimary"
+            android:text=""
+            android:textColor="@android:color/white"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body2" />
         <TextView
             android:id="@+id/notification_route"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_toRightOf="@+id/notification_icon"
+            android:layout_toRightOf="@+id/notification_line"
             android:layout_marginTop="6dp"
-            android:text="Elisedal -> Valand"
-            android:textColor="#000"
+            android:text=""
+            android:textColor="@android:color/black"
             android:textSize="13dp" />
         <TextView
             android:id="@+id/notification_timeTilDeparture"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_toRightOf="@+id/notification_icon"
+            android:layout_toRightOf="@+id/notification_line"
             android:layout_below="@id/notification_route"
-            android:textColor="#000"
+            android:textColor="@android:color/black"
             android:textSize="13dp"
-            android:text="4min" />
+            android:text="" />
     </RelativeLayout>
     <RelativeLayout
         android:layout_width="0dp"
@@ -44,21 +51,27 @@
         android:layout_weight="4">
         <ImageButton
             android:id="@+id/notification_prevBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:layout_toLeftOf="@+id/notification_flipBtn"
+            android:layout_margin="2dp"
+            android:background="@color/colorAccent"
             android:src="@drawable/ic_previous_24dp"/>
         <ImageButton
             android:id="@+id/notification_flipBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:layout_toLeftOf="@+id/notification_nextBtn"
+            android:layout_margin="2dp"
+            android:background="@color/colorAccent"
             android:src="@drawable/ic_flip_24dp"/>
         <ImageButton
             android:id="@+id/notification_nextBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:layout_alignParentRight="true"
+            android:layout_margin="2dp"
+            android:background="@color/colorAccent"
             android:src="@drawable/ic_next_24dp"/>
     </RelativeLayout>
 </LinearLayout>
