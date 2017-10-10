@@ -47,7 +47,7 @@ public class TrackerService extends Service {
             hasBoundNotification = true;
             NotificationService.LocalBinder mLocalBinder = (NotificationService.LocalBinder)service;
             notificationService = mLocalBinder.getService();
-            notificationService.showNotification("", "", "", "");
+            notificationService.showNotification("", "", "", "", "000000");
         }
     };
 
@@ -123,6 +123,7 @@ public class TrackerService extends Service {
                     @Override
                     public void onRequestCompleted(List<Departure> departures) {
                         String[] timesTilDeparture = {"", ""};
+                        String color = "FFFFFF";
                         int index = 0;
                         for (Departure departure: departures) {
                             if (route.tracks(departure, flipRoute)) {
@@ -134,17 +135,18 @@ public class TrackerService extends Service {
                                     if (index > 1) {
                                         break;
                                     }
+                                    color = departure.getFgColor().substring(1);
                                 } catch (ParseException e) {
                                     e.printStackTrace();
                                 }
                             }
                         }
-                        notificationService.showNotification(fromName + " -> " + toName, timesTilDeparture[0], timesTilDeparture[1], route.getLine());
+                        notificationService.showNotification(fromName + " -> " + toName, timesTilDeparture[0], timesTilDeparture[1], route.getLine(), color);
                     }
 
                     @Override
                     public void onRequestFailed() {
-                        notificationService.showNotification("Could not fetch departures", "", "", "");
+                        notificationService.showNotification("Could not fetch departures", "", "", "", "FFFFFF");
                     }
                 });
     }

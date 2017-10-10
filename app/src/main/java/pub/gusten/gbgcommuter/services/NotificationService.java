@@ -6,10 +6,12 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.widget.RemoteViews;
+import android.widget.TextView;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -83,13 +85,13 @@ public class NotificationService extends Service {
 
     @Override
     public void onDestroy() {
-        // Cancel the persistent custom_notification.
         notificationManager.cancel(NOTIFICATION_ID);
     }
 
-    public void showNotification(String routeName, String timeTilDeparture, String timeTilNextDeparture, String line) {
+    public void showNotification(String routeName, String timeTilDeparture, String timeTilNextDeparture, String line, String color) {
         RemoteViews contentView = new RemoteViews(getPackageName(), R.layout.custom_notification);
         String departureText = timeTilDeparture + "min  (" + timeTilNextDeparture + "min)";
+        contentView.setInt(R.id.notification_line, "setBackgroundColor", getColorFromHex(color));
         contentView.setTextViewText(R.id.notification_timeTilDeparture, departureText);
         contentView.setTextViewText(R.id.notification_route, routeName);
         contentView.setTextViewText(R.id.notification_updatedAt, "Updated: " + timeDateFormat.format(new Date()));
@@ -105,5 +107,13 @@ public class NotificationService extends Service {
             .build();
 
         startForeground(NOTIFICATION_ID, notification);
+    }
+
+    private int getColorFromHex(String colorString) {
+        int color = (int)Long.parseLong(colorString, 16);
+        int r = (color >> 16) & 0xFF;
+        int g = (color >> 8) & 0xFF;
+        int b = (color >> 0) & 0xFF;
+        return Color.rgb(r, g, b);
     }
 }
