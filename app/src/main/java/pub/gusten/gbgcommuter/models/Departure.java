@@ -11,8 +11,8 @@ public class Departure {
     private String stop;
     private String time;
     private String date;
-    //private String rtTime;
-    //private String rtDate;
+    private String rtTime;
+    private String rtDate;
     private String journeyid;
     private String direction;
     private String track;
@@ -29,8 +29,8 @@ public class Departure {
         stop =              jsonObject.getString("stop");
         time =              jsonObject.getString("time");
         date =              jsonObject.getString("date");
-        //rtTime =            jsonObject.getString("rtTime");
-        //rtDate =            jsonObject.getString("rtDate");
+        rtTime =            jsonObject.getString("rtTime");
+        rtDate =            jsonObject.getString("rtDate");
         journeyid =         jsonObject.getString("journeyid");
         direction =         jsonObject.getString("direction");
         track =             jsonObject.getString("track");
@@ -64,13 +64,13 @@ public class Departure {
         return date;
     }
 
-    /*public String getRtTime() {
+    public String getRtTime() {
         return rtTime;
     }
 
     public String getRtDate() {
         return rtDate;
-    }*/
+    }
 
     public String getDirection() {
         return direction;
@@ -94,6 +94,8 @@ public class Departure {
                     ", stop = " + stop +
                     ", time = " + time +
                     ", date = " + date +
+                    ", rtTime = " + rtTime +
+                    ", rtDate = " + rtDate +
                     ", journeyid = " + journeyid +
                     ", direction = " + direction +
                     ", track = " + track +

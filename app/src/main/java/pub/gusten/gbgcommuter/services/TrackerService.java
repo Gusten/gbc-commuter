@@ -47,7 +47,7 @@ public class TrackerService extends Service {
             hasBoundNotification = true;
             NotificationService.LocalBinder mLocalBinder = (NotificationService.LocalBinder)service;
             notificationService = mLocalBinder.getService();
-            notificationService.showNotification("", "", "", "", "000000");
+            notificationService.showNotification("", "", "", "", "FFFFFF");
         }
     };
 
@@ -128,7 +128,7 @@ public class TrackerService extends Service {
                         for (Departure departure: departures) {
                             if (route.tracks(departure, flipRoute)) {
                                 try {
-                                    Date tmpDate = fullDateFormat.parse(departure.getDate() + " " + departure.getTime());
+                                    Date tmpDate = fullDateFormat.parse(departure.getRtDate() + " " + departure.getRtTime());
                                     long timeDiff = tmpDate.getTime() - new Date().getTime();
                                     timesTilDeparture[index] = "" + timeDiff / (60 * 1000);
                                     index++;

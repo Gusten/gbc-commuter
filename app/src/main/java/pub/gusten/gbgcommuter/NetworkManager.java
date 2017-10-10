@@ -3,6 +3,7 @@ package pub.gusten.gbgcommuter;
 import android.content.Context;
 import android.icu.text.SimpleDateFormat;
 import android.icu.util.Calendar;
+import android.icu.util.TimeZone;
 import android.util.Base64;
 import android.util.Log;
 
@@ -144,6 +145,7 @@ public class NetworkManager {
 
     private void mFetchDepartures(String stopId, String direction, final DeparturesRequest callback) throws UnsupportedEncodingException {
         Calendar calendar = Calendar.getInstance();
+        calendar.setTimeZone(TimeZone.getDefault());
         String requestQuery = "?id=" + stopId +
                 "&date=" + dateFormat.format(calendar.getTime()) +
                 "&time=" + timeFormat.format(calendar.getTime()) +
