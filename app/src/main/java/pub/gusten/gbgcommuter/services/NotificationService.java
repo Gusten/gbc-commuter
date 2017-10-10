@@ -11,6 +11,9 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.widget.RemoteViews;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import pub.gusten.gbgcommuter.R;
 import pub.gusten.gbgcommuter.models.NotificationAction;
 
@@ -18,6 +21,7 @@ public class NotificationService extends Service {
     private NotificationManager notificationManager;
     private final int NOTIFICATION_ID = R.integer.notification_id;
     private String NOTIFICATION_CHANNEL_ID;
+    private SimpleDateFormat timeDateFormat = new SimpleDateFormat("HH:mm");
 
     private PendingIntent prevPendingIntent;
     private PendingIntent nextPendingIntent;
@@ -83,10 +87,12 @@ public class NotificationService extends Service {
         notificationManager.cancel(NOTIFICATION_ID);
     }
 
-    public void showNotification(String routeName, String timeTilDeparture, String line) {
+    public void showNotification(String routeName, String timeTilDeparture, String timeTilNextDeparture, String line) {
         RemoteViews contentView = new RemoteViews(getPackageName(), R.layout.custom_notification);
+        String departureText = timeTilDeparture + "min  (" + timeTilNextDeparture + "min)";
+        contentView.setTextViewText(R.id.notification_timeTilDeparture, departureText);
         contentView.setTextViewText(R.id.notification_route, routeName);
-        contentView.setTextViewText(R.id.notification_timeTilDeparture, timeTilDeparture);
+        contentView.setTextViewText(R.id.notification_updatedAt, "Updated: " + timeDateFormat.format(new Date()));
         contentView.setTextViewText(R.id.notification_line, line);
         contentView.setOnClickPendingIntent(R.id.notification_prevBtn, prevPendingIntent);
         contentView.setOnClickPendingIntent(R.id.notification_nextBtn, nextPendingIntent);

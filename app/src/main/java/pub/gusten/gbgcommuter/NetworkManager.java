@@ -34,6 +34,10 @@ public class NetworkManager {
         void onRequestCompleted(List<Departure> departures);
         void onRequestFailed();
     }
+    private interface AccessTokenCallback {
+        void onRequestCompleted();
+        void onRequestFailed();
+    }
 
     private final String tokenUrl = "https://api.vasttrafik.se:443/token";
     private final String departureUrl = "https://api.vasttrafik.se/bin/rest.exe/v2/departureBoard";
@@ -50,12 +54,18 @@ public class NetworkManager {
         authStr = context.getResources().getString(R.string.vasttrafik_key) + ":"
                 + context.getResources().getString(R.string.vasttrafik_secret);
         authStr = Base64.encodeToString(authStr.getBytes(), Base64.DEFAULT);
-        fetchAccessToken();
         dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         timeFormat = new SimpleDateFormat("HH:mm");
+        fetchAccessToken(new AccessTokenCallback() {
+            @Override
+            public void onRequestCompleted() {}
+
+            @Override
+            public void onRequestFailed() {}
+        });
     }
 
-    private void fetchAccessToken() {
+    private void fetchAccessToken(final AccessTokenCallback callback) {
         RequestQueue queue = Volley.newRequestQueue(context);
 
         StringRequest stringRequest = new StringRequest(
@@ -68,15 +78,17 @@ public class NetworkManager {
                         JSONObject res = new JSONObject(response);
                         accessToken = res.getString("access_token");
                         expiresAt = System.currentTimeMillis()/1000 + res.getLong("expires_in");
+                        callback.onRequestCompleted();
                     } catch (JSONException e) {
                         e.printStackTrace();
+                        callback.onRequestFailed();
                     }
                 }
             },
             new Response.ErrorListener() {
                 @Override
                 public void onErrorResponse(VolleyError error) {
-
+                    callback.onRequestFailed();
                 }
         }) {
             @Override
@@ -103,42 +115,69 @@ public class NetworkManager {
         queue.add(stringRequest);
     }
 
-    public void fetchDepartures(String stopId, final DeparturesRequest callback) throws UnsupportedEncodingException {
+    public void fetchDepartures(final String stopId, final String direction, final DeparturesRequest callback) {
+        if (System.currentTimeMillis()/1000 >= expiresAt) {
+            fetchAccessToken(new AccessTokenCallback() {
+                @Override
+                public void onRequestCompleted() {
+                    try {
+                        mFetchDepartures(stopId, direction, callback);
+                    } catch (UnsupportedEncodingException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void onRequestFailed() {
+                    callback.onRequestFailed();
+                }
+            });
+        }
+        else {
+            try {
+                mFetchDepartures(stopId, direction, callback);
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void mFetchDepartures(String stopId, String direction, final DeparturesRequest callback) throws UnsupportedEncodingException {
         Calendar calendar = Calendar.getInstance();
         String requestQuery = "?id=" + stopId +
-                              "&date=" + dateFormat.format(calendar.getTime()) +
-                              "&time=" + timeFormat.format(calendar.getTime()) +
-                              "&format=json";
+                "&date=" + dateFormat.format(calendar.getTime()) +
+                "&time=" + timeFormat.format(calendar.getTime()) +
+                "&direction=" + direction +
+                "&format=json";
 
         RequestQueue queue = Volley.newRequestQueue(context);
 
         StringRequest stringRequest = new StringRequest(
-            Request.Method.GET,
-            departureUrl + requestQuery,
-            new Response.Listener<String>() {
-                @Override
-                public void onResponse(String response) {
-                    try {
-                        List<Departure> departures = new ArrayList<>();
-                        JSONObject jsonObject = new JSONObject(response);
-                        JSONArray jsonArray = jsonObject.getJSONObject("DepartureBoard").getJSONArray("Departure");
-                        List<Departure> test = new ArrayList<>();
-                        for (int i = 0; i < jsonArray.length(); i++) {
-                            departures.add(new Departure(jsonArray.getJSONObject(i)));
+                Request.Method.GET,
+                departureUrl + requestQuery,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            List<Departure> departures = new ArrayList<>();
+                            JSONObject jsonObject = new JSONObject(response);
+                            JSONArray jsonArray = jsonObject.getJSONObject("DepartureBoard").getJSONArray("Departure");
+                            for (int i = 0; i < jsonArray.length(); i++) {
+                                departures.add(new Departure(jsonArray.getJSONObject(i)));
+                            }
+                            callback.onRequestCompleted(departures);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                            callback.onRequestFailed();
                         }
-                        callback.onRequestCompleted(departures);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
                         callback.onRequestFailed();
                     }
-                }
-            },
-            new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    callback.onRequestFailed();
-                }
-            }) {
+                }) {
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
                 Map<String, String> headers = new HashMap<>();

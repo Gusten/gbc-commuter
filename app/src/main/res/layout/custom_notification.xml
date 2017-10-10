@@ -50,6 +50,16 @@
             android:textColor="@android:color/black"
             android:textSize="13dp"
             android:text="" />
+        <TextView
+            android:id="@+id/notification_updatedAt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_marginTop="24dp"
+            android:textColor="@android:color/darker_gray"
+            android:textSize="10dp"
+            android:textStyle="italic"
+            android:text="Updated" />
     </RelativeLayout>
     <RelativeLayout
         android:layout_width="0dp"
