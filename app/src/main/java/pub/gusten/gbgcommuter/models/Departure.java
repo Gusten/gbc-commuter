@@ -2,35 +2,37 @@ package pub.gusten.gbgcommuter.models;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.threeten.bp.LocalDateTime;
+
+import pub.gusten.gbgcommuter.DateUtils;
 
 public class Departure {
-    private String name;
-    private String sname;
-    private String type;
-    private String stopid;
-    private String stop;
-    private String time;
-    private String date;
-    private String rtTime;
-    private String rtDate;
-    private String journeyid;
-    private String direction;
-    private String track;
-    private String fgColor;
-    private String bgColor;
-    private String stroke;
-    private String JourneyDetailRef;
+    private final String name;
+    private final String line;
+    private final String type;
+    private final String stopid;
+    private final String stop;
+    private final String time;
+    private final String date;
+    private final String rtTime;
+    private final String rtDate;
+    private final String journeyid;
+    private final String direction;
+    private final String track;
+    private final String fgColor;
+    private final String bgColor;
+    private final String stroke;
+    private final String JourneyDetailRef;
+    private final LocalDateTime timeInstant;
 
     public Departure(JSONObject jsonObject) throws JSONException {
         name =              jsonObject.getString("name");
-        sname =             jsonObject.getString("sname");
+        line =             jsonObject.getString("sname");
         type =              jsonObject.getString("type");
         stopid =            jsonObject.getString("stopid");
         stop =              jsonObject.getString("stop");
         time =              jsonObject.getString("time");
         date =              jsonObject.getString("date");
-        rtTime =            jsonObject.getString("rtTime");
-        rtDate =            jsonObject.getString("rtDate");
         journeyid =         jsonObject.getString("journeyid");
         direction =         jsonObject.getString("direction");
         track =             jsonObject.getString("track");
@@ -38,14 +40,26 @@ public class Departure {
         bgColor =           jsonObject.getString("bgColor");
         stroke =            jsonObject.getString("stroke");
         JourneyDetailRef =  jsonObject.getJSONObject("JourneyDetailRef").getString("ref");
+
+        // Sometimes the json object from the api does not come with rtTime/rtDate fields
+        if (jsonObject.has("rtTime") && jsonObject.has("rtDate")) {
+            rtTime =            jsonObject.getString("rtTime");
+            rtDate =            jsonObject.getString("rtDate");
+        }
+        else {
+            rtTime = time;
+            rtDate = date;
+        }
+
+        timeInstant = LocalDateTime.parse(rtDate + " " + rtTime, DateUtils.fullDateFormatter);
     }
 
     public String getName() {
         return name;
     }
 
-    public String getSname() {
-        return sname;
+    public String getLine() {
+        return line;
     }
 
     public String getType() {
@@ -84,11 +98,15 @@ public class Departure {
         return bgColor;
     }
 
+    public LocalDateTime getTimeInstant() {
+        return timeInstant;
+    }
+
     @Override
     public String toString() {
         return "Departure {" +
                     "name = " + name +
-                    ", sname = " + sname +
+                    ", line = " + line +
                     ", type = " + type +
                     ", stopid = " + stopid +
                     ", stop = " + stop +

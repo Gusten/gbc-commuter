@@ -6,21 +6,21 @@ import org.json.JSONObject;
 import java.util.Objects;
 
 public class TrackedRoute {
-    private String from;
-    private String fromStopId;
-    private String fromDirection;
-    private String to;
-    private String toStopId;
-    private String toDirection;
-    private String line;
+    private final String from;
+    private final String fromStopId;
+    //private final String fromDirection;
+    private final String to;
+    private final String toStopId;
+    //private final String toDirection;
+    private final String line;
 
-    public TrackedRoute(String from, String fromStopId, String fromDirection, String to, String toStopId, String toDirection, String line) {
+    public TrackedRoute(String from, String fromStopId, String to, String toStopId, String line) {
         this.from = from;
         this.fromStopId = fromStopId;
-        this.fromDirection = fromDirection;
+        //this.fromDirection = fromDirection;
         this.to = to;
         this.toStopId = toStopId;
-        this.toDirection = toDirection;
+        //this.toDirection = toDirection;
         this.line = line;
     }
 
@@ -32,9 +32,9 @@ public class TrackedRoute {
         return fromStopId;
     }
 
-    public String getFromDirection() {
+    /*public String getFromDirection() {
         return fromDirection;
-    }
+    }*/
 
     public String getTo() {
         return to;
@@ -44,9 +44,9 @@ public class TrackedRoute {
         return toStopId;
     }
 
-    public String getToDirection() {
+    /*public String getToDirection() {
         return toDirection;
-    }
+    }*/
 
     public String getLine() {
         return line;
@@ -56,21 +56,16 @@ public class TrackedRoute {
         JSONObject jsonObj = new JSONObject();
         jsonObj.put("from", from);
         jsonObj.put("fromStopId", fromStopId);
-        jsonObj.put("fromDirection", fromDirection);
+        //jsonObj.put("fromDirection", fromDirection);
         jsonObj.put("to", to);
         jsonObj.put("toStopId", toStopId);
-        jsonObj.put("toDirection", toDirection);
+        //jsonObj.put("toDirection", toDirection);
         jsonObj.put("line", line);
         return jsonObj;
     }
 
-    public boolean tracks(Departure departure, boolean flipped) {
-        if (flipped) {
-            return getLine().equals(departure.getSname()) && getFromDirection().equals(departure.getDirection());
-        }
-        else {
-            return getLine().equals(departure.getSname()) && getToDirection().equals(departure.getDirection());
-        }
+    public boolean tracks(Departure departure) {
+        return getLine().equals(departure.getLine());
     }
 
     @Override
@@ -88,10 +83,10 @@ public class TrackedRoute {
         return "TrackedRoute {" +
                     "from = " + from +
                     ", fromStopId = " + fromStopId +
-                    ", fromDirection = " + fromDirection +
+                    //", fromDirection = " + fromDirection +
                     ", to = " + to +
                     ", toStopId = " + toStopId +
-                    ", toDirection = " + toDirection +
+                    //", toDirection = " + toDirection +
                     ", line = " + line +
                 "}";
     }

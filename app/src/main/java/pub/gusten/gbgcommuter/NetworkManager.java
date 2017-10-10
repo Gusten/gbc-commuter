@@ -1,22 +1,19 @@
 package pub.gusten.gbgcommuter;
 
 import android.content.Context;
-import android.icu.text.SimpleDateFormat;
-import android.icu.util.Calendar;
-import android.icu.util.TimeZone;
 import android.util.Base64;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.threeten.bp.Instant;
+import org.threeten.bp.LocalDateTime;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -43,17 +40,14 @@ public class NetworkManager {
     private Context context;
     private String authStr;
     private String accessToken;
-    private long expiresAt;
-    private SimpleDateFormat dateFormat;
-    private SimpleDateFormat timeFormat;
+    private Instant expirationDate;
 
     public NetworkManager(Context context) {
         this.context = context;
         authStr = context.getResources().getString(R.string.vasttrafik_key) + ":"
                 + context.getResources().getString(R.string.vasttrafik_secret);
         authStr = Base64.encodeToString(authStr.getBytes(), Base64.DEFAULT);
-        dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        timeFormat = new SimpleDateFormat("HH:mm");
+        expirationDate = Instant.now();
         fetchAccessToken(new AccessTokenCallback() {
             @Override
             public void onRequestCompleted() {}
@@ -69,26 +63,19 @@ public class NetworkManager {
         StringRequest stringRequest = new StringRequest(
             Request.Method.POST,
             tokenUrl,
-            new Response.Listener<String>() {
-                @Override
-                public void onResponse(String response) {
-                    try {
-                        JSONObject res = new JSONObject(response);
-                        accessToken = res.getString("access_token");
-                        expiresAt = System.currentTimeMillis()/1000 + res.getLong("expires_in");
-                        callback.onRequestCompleted();
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                        callback.onRequestFailed();
-                    }
-                }
-            },
-            new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
+            response -> {
+                try {
+                    JSONObject res = new JSONObject(response);
+                    accessToken = res.getString("access_token");
+                    expirationDate = Instant.ofEpochSecond(System.currentTimeMillis()/1000 + res.getLong("expires_in"));
+                    callback.onRequestCompleted();
+                } catch (JSONException e) {
+                    e.printStackTrace();
                     callback.onRequestFailed();
                 }
-        }) {
+            },
+            error -> callback.onRequestFailed())
+        {
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
                 Map<String, String> headers = new HashMap<>();
@@ -113,13 +100,14 @@ public class NetworkManager {
         queue.add(stringRequest);
     }
 
-    public void fetchDepartures(final String stopId, final String direction, final DeparturesRequest callback) {
-        if (System.currentTimeMillis()/1000 >= expiresAt) {
+    public void fetchDepartures(final String fromStopId, final String toStopId, final DeparturesRequest callback) {
+        // Check if we need to refresh access token
+        if(Instant.now().isAfter(expirationDate)) {
             fetchAccessToken(new AccessTokenCallback() {
                 @Override
                 public void onRequestCompleted() {
                     try {
-                        mFetchDepartures(stopId, direction, callback);
+                        mFetchDepartures(fromStopId, toStopId, callback);
                     } catch (UnsupportedEncodingException e) {
                         e.printStackTrace();
                     }
@@ -133,20 +121,19 @@ public class NetworkManager {
         }
         else {
             try {
-                mFetchDepartures(stopId, direction, callback);
+                mFetchDepartures(fromStopId, toStopId, callback);
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
         }
     }
 
-    private void mFetchDepartures(String stopId, String direction, final DeparturesRequest callback) throws UnsupportedEncodingException {
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeZone(TimeZone.getDefault());
-        String requestQuery = "?id=" + stopId +
-                "&date=" + dateFormat.format(calendar.getTime()) +
-                "&time=" + timeFormat.format(calendar.getTime()) +
-                "&direction=" + direction +
+    private void mFetchDepartures(String fromStopId, String toStopId, final DeparturesRequest callback) throws UnsupportedEncodingException {
+        final LocalDateTime now = LocalDateTime.now();
+        String requestQuery = "?id=" + fromStopId +
+                "&date=" + now.format(DateUtils.dateOnlyFormatter) +
+                "&time=" + now.format(DateUtils.timeOnlyFormatter) +
+                "&direction=" + toStopId +
                 "&format=json";
 
         RequestQueue queue = Volley.newRequestQueue(context);
@@ -154,29 +141,27 @@ public class NetworkManager {
         StringRequest stringRequest = new StringRequest(
                 Request.Method.GET,
                 departureUrl + requestQuery,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        try {
-                            List<Departure> departures = new ArrayList<>();
-                            JSONObject jsonObject = new JSONObject(response);
-                            JSONArray jsonArray = jsonObject.getJSONObject("DepartureBoard").getJSONArray("Departure");
-                            for (int i = 0; i < jsonArray.length(); i++) {
-                                departures.add(new Departure(jsonArray.getJSONObject(i)));
+                response -> {
+                    try {
+                        List<Departure> departures = new ArrayList<>();
+                        JSONObject jsonObject = new JSONObject(response);
+                        JSONArray jsonArray = jsonObject.getJSONObject("DepartureBoard").getJSONArray("Departure");
+                        for (int i = 0; i < jsonArray.length(); i++) {
+                            Departure tmp = new Departure(jsonArray.getJSONObject(i));
+                            // Sometimes old objects sneaks through. Throw em away
+                            if (tmp.getTimeInstant().isBefore(now)) {
+                                continue;
                             }
-                            callback.onRequestCompleted(departures);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            callback.onRequestFailed();
+                            departures.add(tmp);
                         }
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
+                        callback.onRequestCompleted(departures);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
                         callback.onRequestFailed();
                     }
-                }) {
+                },
+                error -> callback.onRequestFailed())
+        {
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
                 Map<String, String> headers = new HashMap<>();

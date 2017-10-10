@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/layout"
     android:layout_width="fill_parent"
     android:layout_height="64dp"
@@ -19,25 +20,26 @@
         android:layout_weight="6.8"
         android:gravity="center_vertical">
 
-        <TextView
+        <ImageView
             android:id="@+id/notification_line"
             android:layout_width="36dp"
             android:layout_height="36dp"
-            android:layout_marginTop="2dp"
-            android:layout_marginLeft="2dp"
             android:layout_marginBottom="2dp"
+            android:layout_marginLeft="2dp"
             android:layout_marginRight="8dp"
+            android:layout_marginTop="2dp"
             android:gravity="center"
-            android:background="@color/colorPrimary"
-            android:text=""
+            android:text="X"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body2"
             android:textColor="@android:color/white"
-            android:textAppearance="@style/TextAppearance.AppCompat.Body2" />
+            android:background="@color/colorPrimary"
+            app:srcCompat="@drawable/ic_mood_bad_24dp" />
         <TextView
             android:id="@+id/notification_route"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_toRightOf="@+id/notification_line"
             android:layout_marginTop="2dp"
+            android:layout_toRightOf="@id/notification_line"
             android:text=""
             android:textColor="@android:color/black"
             android:textSize="13dp"
@@ -45,24 +47,14 @@
             android:ellipsize="end"
             android:maxLines="1"/>
         <TextView
-            android:id="@+id/notification_timeTilDeparture"
+            android:id="@+id/notification_error"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_toRightOf="@+id/notification_line"
+            android:layout_toRightOf="@id/notification_line"
             android:layout_below="@id/notification_route"
+            android:text="No departures found"
             android:textColor="@android:color/black"
-            android:textSize="13dp"
-            android:text="" />
-        <TextView
-            android:id="@+id/notification_updatedAt"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
-            android:layout_marginTop="24dp"
-            android:textColor="@android:color/darker_gray"
-            android:textSize="10dp"
-            android:textStyle="italic"
-            android:text="Updated" />
+            android:textSize="13dp" />
     </RelativeLayout>
     <RelativeLayout
         android:layout_width="0dp"

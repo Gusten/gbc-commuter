@@ -2,5 +2,6 @@
     <string name="app_name">GBG Commuter</string>
     <string name="action_settings">Settings</string>
     <string name="notification_channel_id">gbgc_notification_channel</string>
+    <string name="notification_channel_name">gbgc_notification_channel</string>
     <integer name="notification_id">1</integer>
 </resources>

@@ -10,12 +10,9 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
-import java.util.TimeZone;
 
 import pub.gusten.gbgcommuter.NetworkManager;
 import pub.gusten.gbgcommuter.ScreenReceiver;
@@ -32,7 +29,6 @@ public class TrackerService extends Service {
     private List<TrackedRoute> trackedRoutes;
     private int trackedRouteIndex;
     private boolean flipRoute;
-    private SimpleDateFormat fullDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
     private NotificationService notificationService;
     private boolean hasBoundNotification;
     private ServiceConnection serviceConnection = new ServiceConnection() {
@@ -46,7 +42,7 @@ public class TrackerService extends Service {
             hasBoundNotification = true;
             NotificationService.LocalBinder mLocalBinder = (NotificationService.LocalBinder)service;
             notificationService = mLocalBinder.getService();
-            notificationService.showNotification("", "", "", "", "FFFFFF");
+            notificationService.showEmptyNotification();
         }
     };
 
@@ -71,11 +67,10 @@ public class TrackerService extends Service {
         bindService(new Intent(this, NotificationService.class), serviceConnection, BIND_AUTO_CREATE);
 
         trackedRoutes = new ArrayList<>();
-        trackedRoutes.add(new TrackedRoute("elisedal", "9021014002210000", "Mölndal", "valand", "9021014007220000", "Angered", "4"));
-        trackedRoutes.add(new TrackedRoute("pilbågsgatan", "9021014005280000", "Fredriksdal", "vasaplatsen", "9021014007300000", "Backa via Kungsportsplatsen", "19"));
+        trackedRoutes.add(new TrackedRoute("Elisedal", "9021014002210000", "Valand", "9021014007220000", "4"));
+        trackedRoutes.add(new TrackedRoute("Pilbågsgatan", "9021014005280000", "Vasaplatsen", "9021014007300000", "19"));
+        //trackedRoutes.add(new TrackedRoute("Hjalmar Brantingsplatsen", "9021014003180000", "Vasaplatsen", "9021014007300000", "10"));
         trackedRouteIndex = 0;
-
-        fullDateFormat.setTimeZone(TimeZone.getDefault());
 
         final IntentFilter intentFilter = new IntentFilter(Intent.ACTION_SCREEN_ON);
         screenReceiver = new ScreenReceiver();
@@ -113,39 +108,32 @@ public class TrackerService extends Service {
 
     private void trackRoute(final TrackedRoute route) {
         final String fromStopId = flipRoute ? route.getToStopId() : route.getFromStopId();
-        final String fromName = flipRoute ? route.getTo() : route.getFrom();
         final String toStopId = flipRoute ? route.getFromStopId() : route.getToStopId();
+        final String fromName = flipRoute ? route.getTo() : route.getFrom();
         final String toName = flipRoute ? route.getFrom() : route.getTo();
 
         networkManager.fetchDepartures(fromStopId, toStopId,
                 new NetworkManager.DeparturesRequest() {
                     @Override
                     public void onRequestCompleted(List<Departure> departures) {
-                        String[] timesTilDeparture = {"", ""};
-                        String color = "FFFFFF";
+                        List<Departure> trackedDepartures = new ArrayList<>();
+
                         int index = 0;
-                        for (Departure departure: departures) {
-                            if (route.tracks(departure, flipRoute)) {
-                                try {
-                                    Date tmpDate = fullDateFormat.parse(departure.getRtDate() + " " + departure.getRtTime());
-                                    long timeDiff = tmpDate.getTime() - new Date().getTime();
-                                    timesTilDeparture[index] = "" + timeDiff / (60 * 1000);
-                                    index++;
-                                    if (index > 1) {
-                                        break;
-                                    }
-                                    color = departure.getFgColor().substring(1);
-                                } catch (ParseException e) {
-                                    e.printStackTrace();
-                                }
+                        Iterator<Departure> iterator = departures.iterator();
+                        while(index < 2 && iterator.hasNext()) {
+                            Departure nextDeparture = iterator.next();
+                            if (route.tracks(nextDeparture)) {
+                                trackedDepartures.add(nextDeparture);
+                                index++;
                             }
                         }
-                        notificationService.showNotification(fromName + " -> " + toName, timesTilDeparture[0], timesTilDeparture[1], route.getLine(), color);
+
+                        notificationService.showNotification(fromName, toName, trackedDepartures);
                     }
 
                     @Override
                     public void onRequestFailed() {
-                        notificationService.showNotification("Could not fetch departures", "", "", "", "FFFFFF");
+                        notificationService.showEmptyNotification();
                     }
                 });
     }

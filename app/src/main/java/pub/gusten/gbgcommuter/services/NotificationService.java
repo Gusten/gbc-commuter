@@ -8,21 +8,28 @@ import android.app.Service;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NotificationCompat;
 import android.widget.RemoteViews;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import org.threeten.bp.Duration;
+import org.threeten.bp.LocalDateTime;
+import org.threeten.bp.LocalTime;
 
+import java.util.List;
+
+import pub.gusten.gbgcommuter.DateUtils;
 import pub.gusten.gbgcommuter.R;
+import pub.gusten.gbgcommuter.models.Departure;
 import pub.gusten.gbgcommuter.models.NotificationAction;
 
 public class NotificationService extends Service {
     private NotificationManager notificationManager;
     private final int NOTIFICATION_ID = R.integer.notification_id;
     private String NOTIFICATION_CHANNEL_ID;
-    private SimpleDateFormat timeDateFormat = new SimpleDateFormat("HH:mm");
+    private String NOTIFICATION_CHANNEL_NAME;
 
     private PendingIntent prevPendingIntent;
     private PendingIntent nextPendingIntent;
@@ -44,6 +51,15 @@ public class NotificationService extends Service {
 
     @Override
     public void onCreate() {
+        NOTIFICATION_CHANNEL_ID = getString(R.string.notification_channel_id);
+        NOTIFICATION_CHANNEL_NAME = getString(R.string.notification_channel_name);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+            NotificationChannel mChannel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, NOTIFICATION_CHANNEL_NAME, NotificationManager.IMPORTANCE_LOW);
+            notificationManager.createNotificationChannel(mChannel);
+        }
+
         // Intent for selecting previous route
         Intent prevIntent = new Intent(this, TrackerService.class);
         prevIntent.putExtra("action", NotificationAction.PREVIOUS);
@@ -75,10 +91,6 @@ public class NotificationService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        NOTIFICATION_CHANNEL_ID = getString(R.string.notification_channel_id);
-        notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-        NotificationChannel mChannel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, "testChannel", NotificationManager.IMPORTANCE_LOW);
-        notificationManager.createNotificationChannel(mChannel);
         return START_STICKY;
     }
 
@@ -87,23 +99,75 @@ public class NotificationService extends Service {
         notificationManager.cancel(NOTIFICATION_ID);
     }
 
-    public void showNotification(String routeName, String timeTilDeparture, String timeTilNextDeparture, String line, String color) {
+    public void showNotification(String from, String to, List<Departure> departures) {
+        if (departures.isEmpty()) {
+            showNoDepartures(from, to);
+            return;
+        }
+
         RemoteViews contentView = new RemoteViews(getPackageName(), R.layout.custom_notification);
-        String departureText = timeTilDeparture + "min  (" + timeTilNextDeparture + "min)";
-        contentView.setInt(R.id.notification_line, "setBackgroundColor", getColorFromHex(color));
-        contentView.setTextViewText(R.id.notification_timeTilDeparture, departureText);
-        contentView.setTextViewText(R.id.notification_route, routeName);
-        contentView.setTextViewText(R.id.notification_updatedAt, "Updated: " + timeDateFormat.format(new Date()));
-        contentView.setTextViewText(R.id.notification_line, line);
+
+        // Set time til departure
+        Departure nextDeparture = departures.get(0);
+        LocalDateTime now = LocalDateTime.now();
+        String timeTilDepartureText = Duration.between(now, nextDeparture.getTimeInstant()).toMinutes() + "min";
+
+        if (departures.size() > 1) {
+            timeTilDepartureText += "  (" + Duration.between(now, departures.get(1).getTimeInstant()).toMinutes() + "min)";
+        }
+        contentView.setTextViewText(R.id.notification_timeTilDeparture, timeTilDepartureText);
+
+        contentView.setInt(R.id.notification_line, "setBackgroundColor", getColorFromHex(nextDeparture.getFgColor().substring(1)));
+        contentView.setTextViewText(R.id.notification_line, nextDeparture.getLine());
+        contentView.setTextColor(R.id.notification_line, getColorFromHex(nextDeparture.getBgColor().substring(1)));
+        contentView.setTextViewText(R.id.notification_route, from + "  >>  " + to);
+        contentView.setTextViewText(R.id.notification_updatedAt, "Updated: " + DateUtils.timeOnlyFormatter.format(LocalTime.now()));
         contentView.setOnClickPendingIntent(R.id.notification_prevBtn, prevPendingIntent);
         contentView.setOnClickPendingIntent(R.id.notification_nextBtn, nextPendingIntent);
         contentView.setOnClickPendingIntent(R.id.notification_flipBtn, flipPendingIntent);
 
-        Notification notification = new Notification.Builder(this, NOTIFICATION_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_train_24dp)
-            .setContent(contentView)
-            .setVisibility(Notification.VISIBILITY_PUBLIC)
-            .build();
+        Notification notification = new NotificationCompat.Builder(this)
+                .setChannel(NOTIFICATION_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_train_24dp)
+                .setContent(contentView)
+                .setVisibility(Notification.VISIBILITY_PUBLIC)
+                .build();
+
+        startForeground(NOTIFICATION_ID, notification);
+    }
+
+
+    public void showEmptyNotification() {
+        RemoteViews contentView = new RemoteViews(getPackageName(), R.layout.custom_empty_notification);
+        contentView.setTextViewText(R.id.notification_error, "");
+        contentView.setOnClickPendingIntent(R.id.notification_prevBtn, prevPendingIntent);
+        contentView.setOnClickPendingIntent(R.id.notification_nextBtn, nextPendingIntent);
+        contentView.setOnClickPendingIntent(R.id.notification_flipBtn, flipPendingIntent);
+
+        Notification notification = new NotificationCompat.Builder(this)
+                .setChannel(NOTIFICATION_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_train_24dp)
+                .setContent(contentView)
+                .setVisibility(Notification.VISIBILITY_PUBLIC)
+                .build();
+
+        startForeground(NOTIFICATION_ID, notification);
+    }
+
+    private void showNoDepartures(String from, String to) {
+        RemoteViews contentView = new RemoteViews(getPackageName(), R.layout.custom_empty_notification);
+        contentView.setTextViewText(R.id.notification_route, from + "  >>  " + to);
+        contentView.setTextViewText(R.id.notification_error, "No departures found");
+        contentView.setOnClickPendingIntent(R.id.notification_prevBtn, prevPendingIntent);
+        contentView.setOnClickPendingIntent(R.id.notification_nextBtn, nextPendingIntent);
+        contentView.setOnClickPendingIntent(R.id.notification_flipBtn, flipPendingIntent);
+
+        Notification notification = new NotificationCompat.Builder(this)
+                .setChannel(NOTIFICATION_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_train_24dp)
+                .setContent(contentView)
+                .setVisibility(Notification.VISIBILITY_PUBLIC)
+                .build();
 
         startForeground(NOTIFICATION_ID, notification);
     }
