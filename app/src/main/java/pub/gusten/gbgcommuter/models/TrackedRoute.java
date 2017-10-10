@@ -8,15 +8,19 @@ import java.util.Objects;
 public class TrackedRoute {
     private String from;
     private String fromStopId;
+    private String fromDirection;
     private String to;
     private String toStopId;
+    private String toDirection;
     private String line;
 
-    public TrackedRoute(String from, String fromStopId, String to, String toStopId, String line) {
+    public TrackedRoute(String from, String fromStopId, String fromDirection, String to, String toStopId, String toDirection, String line) {
         this.from = from;
         this.fromStopId = fromStopId;
+        this.fromDirection = fromDirection;
         this.to = to;
         this.toStopId = toStopId;
+        this.toDirection = toDirection;
         this.line = line;
     }
 
@@ -28,12 +32,20 @@ public class TrackedRoute {
         return fromStopId;
     }
 
+    public String getFromDirection() {
+        return fromDirection;
+    }
+
     public String getTo() {
         return to;
     }
 
     public String getToStopId() {
         return toStopId;
+    }
+
+    public String getToDirection() {
+        return toDirection;
     }
 
     public String getLine() {
@@ -44,14 +56,21 @@ public class TrackedRoute {
         JSONObject jsonObj = new JSONObject();
         jsonObj.put("from", from);
         jsonObj.put("fromStopId", fromStopId);
+        jsonObj.put("fromDirection", fromDirection);
         jsonObj.put("to", to);
         jsonObj.put("toStopId", toStopId);
+        jsonObj.put("toDirection", toDirection);
         jsonObj.put("line", line);
         return jsonObj;
     }
 
-    public boolean tracks(Departure departure) {
-        return getLine().equals(departure.getSname());
+    public boolean tracks(Departure departure, boolean flipped) {
+        if (flipped) {
+            return getLine().equals(departure.getSname()) && getFromDirection().equals(departure.getDirection());
+        }
+        else {
+            return getLine().equals(departure.getSname()) && getToDirection().equals(departure.getDirection());
+        }
     }
 
     @Override
@@ -69,8 +88,10 @@ public class TrackedRoute {
         return "TrackedRoute {" +
                     "from = " + from +
                     ", fromStopId = " + fromStopId +
+                    ", fromDirection = " + fromDirection +
                     ", to = " + to +
                     ", toStopId = " + toStopId +
+                    ", toDirection = " + toDirection +
                     ", line = " + line +
                 "}";
     }

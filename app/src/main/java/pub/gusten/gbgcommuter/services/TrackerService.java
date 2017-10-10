@@ -69,8 +69,8 @@ public class TrackerService extends Service {
         bindService(new Intent(this, NotificationService.class), serviceConnection, BIND_AUTO_CREATE);
 
         trackedRoutes = new ArrayList<>();
-        trackedRoutes.add(new TrackedRoute("elisedal", "9021014002210000", "valand", "9021014007220000", "4"));
-        trackedRoutes.add(new TrackedRoute("pilbågsgatan", "9021014005280000", "vasaplatsen", "9021014007300000", "19"));
+        trackedRoutes.add(new TrackedRoute("elisedal", "9021014002210000", "Mölndal", "valand", "9021014007220000", "Angered", "4"));
+        trackedRoutes.add(new TrackedRoute("pilbågsgatan", "9021014005280000", "Fredriksdal", "vasaplatsen", "9021014007300000", "Backa via Kungsportsplatsen", "19"));
         trackedRouteIndex = 0;
     }
 
@@ -111,7 +111,7 @@ public class TrackerService extends Service {
                         @Override
                         public void onRequestCompleted(List<Departure> departures) {
                             for (Departure departure: departures) {
-                                if (route.tracks(departure)) {
+                                if (route.tracks(departure, flipRoute)) {
                                     try {
                                         fullDateFormat.setTimeZone(TimeZone.getDefault());
                                         Date tmpDate = fullDateFormat.parse(departure.getDate() + " " + departure.getTime());
