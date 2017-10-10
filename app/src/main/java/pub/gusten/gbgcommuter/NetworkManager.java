@@ -42,7 +42,6 @@ public class NetworkManager {
     private String authStr;
     private String accessToken;
     private long expiresAt;
-    private Calendar calendar;
     private SimpleDateFormat dateFormat;
     private SimpleDateFormat timeFormat;
 
@@ -52,7 +51,6 @@ public class NetworkManager {
                 + context.getResources().getString(R.string.vasttrafik_secret);
         authStr = Base64.encodeToString(authStr.getBytes(), Base64.DEFAULT);
         fetchAccessToken();
-        calendar = Calendar.getInstance();
         dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         timeFormat = new SimpleDateFormat("HH:mm");
     }
@@ -106,6 +104,7 @@ public class NetworkManager {
     }
 
     public void fetchDepartures(String stopId, final DeparturesRequest callback) throws UnsupportedEncodingException {
+        Calendar calendar = Calendar.getInstance();
         String requestQuery = "?id=" + stopId +
                               "&date=" + dateFormat.format(calendar.getTime()) +
                               "&time=" + timeFormat.format(calendar.getTime()) +
