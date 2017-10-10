@@ -11,7 +11,6 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.widget.RemoteViews;
-import android.widget.TextView;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
