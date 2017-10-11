@@ -6,14 +6,23 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.AutoCompleteTextView;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import pub.gusten.gbgcommuter.models.Route;
+import pub.gusten.gbgcommuter.models.Stop;
 import pub.gusten.gbgcommuter.services.ApiService;
 import pub.gusten.gbgcommuter.services.TrackerService;
 
@@ -54,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean routeSelected;
     private Route selectedRoute;
+    private List<Stop> availableStops;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,6 +80,19 @@ public class MainActivity extends AppCompatActivity {
                 tracker.startTracking(selectedRoute);
             }
         });
+
+        // Load locations from JSON file
+        loadLocations();
+
+        StopArrayAdapter adapter = new StopArrayAdapter(this, android.R.layout.simple_list_item_1, availableStops);
+
+        AutoCompleteTextView fromSelector = (AutoCompleteTextView)findViewById(R.id.main_from_location);
+        fromSelector.setAdapter(adapter);
+        fromSelector.setThreshold(1);
+
+        AutoCompleteTextView toSelector = (AutoCompleteTextView)findViewById(R.id.main_to_location);
+        toSelector.setAdapter(adapter);
+        toSelector.setThreshold(1);
 
         // Start necessary services
         startService(new Intent(this, TrackerService.class));
@@ -99,5 +122,35 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void loadLocations() {
+        availableStops = new ArrayList<>();
+
+        try {
+            InputStream inputStream = getAssets().open("locations.json");
+            int size = inputStream.available();
+            byte[] buffer = new byte[size];
+
+            inputStream.read(buffer);
+            inputStream.close();
+
+            String json = new String(buffer, "UTF-8");
+            JSONArray locations = new JSONArray(json);
+
+            for(int i = 0; i < locations.length(); i++) {
+                JSONObject tmp = locations.getJSONObject(i);
+                Stop tmpStop = new Stop(
+                    tmp.getString("name"),
+                    tmp.getLong("id"),
+                    tmp.getDouble("lat"),
+                    tmp.getDouble("lon"),
+                    tmp.getInt("weight")
+                );
+                availableStops.add(tmpStop);
+            }
+        } catch (IOException | JSONException ex) {
+            ex.printStackTrace();
+        }
     }
 }

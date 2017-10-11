@@ -1,7 +1,6 @@
 package pub.gusten.gbgcommuter.services;
 
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
@@ -46,7 +45,7 @@ public class ApiService extends Service {
 
     private String authStr;
     private String accessToken;
-    private Instant expirationDate;
+    private Instant tokenExpirationDate;
 
     @Nullable
     @Override
@@ -67,7 +66,7 @@ public class ApiService extends Service {
         authStr = getResources().getString(R.string.vasttrafik_key) + ":"
                 + getResources().getString(R.string.vasttrafik_secret);
         authStr = Base64.encodeToString(authStr.getBytes(), Base64.DEFAULT);
-        expirationDate = Instant.now();
+        tokenExpirationDate = Instant.now();
         fetchAccessToken(new AccessTokenCallback() {
             @Override
             public void onRequestCompleted() {}
@@ -92,7 +91,7 @@ public class ApiService extends Service {
                 try {
                     JSONObject res = new JSONObject(response);
                     accessToken = res.getString("access_token");
-                    expirationDate = Instant.ofEpochSecond(System.currentTimeMillis()/1000 + res.getLong("expires_in"));
+                    tokenExpirationDate = Instant.ofEpochSecond(System.currentTimeMillis()/1000 + res.getLong("expires_in"));
                     callback.onRequestCompleted();
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -127,7 +126,7 @@ public class ApiService extends Service {
 
     public void fetchDepartures(final String fromStopId, final String toStopId, final DeparturesRequest callback) {
         // Check if we need to refresh access token
-        if(Instant.now().isAfter(expirationDate)) {
+        if(Instant.now().isAfter(tokenExpirationDate)) {
             fetchAccessToken(new AccessTokenCallback() {
                 @Override
                 public void onRequestCompleted() {

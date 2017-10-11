@@ -17,9 +17,9 @@ public class RouteAdapter extends BaseAdapter {
     private LayoutInflater mInflater;
     private ArrayList<Route> routes;
 
-    public RouteAdapter(Context mContext, LayoutInflater mInflater, ArrayList<Route> routes) {
+    public RouteAdapter(Context mContext, ArrayList<Route> routes) {
         this.mContext = mContext;
-        this.mInflater = mInflater;
+        this.mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);;
         this.routes = routes;
 
         // https://api.vasttrafik.se/bin/rest.exe/v2/trip?originId=9021014002210000&destId=9021014007220000&maxChanges=0&format=json
