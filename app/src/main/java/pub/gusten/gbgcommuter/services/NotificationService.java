@@ -12,18 +12,18 @@ import android.os.Build;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
+import android.view.View;
 import android.widget.RemoteViews;
 
 import org.threeten.bp.Duration;
 import org.threeten.bp.LocalDateTime;
 import org.threeten.bp.LocalTime;
 
-import java.util.List;
-
 import pub.gusten.gbgcommuter.DateUtils;
 import pub.gusten.gbgcommuter.R;
 import pub.gusten.gbgcommuter.models.Departure;
 import pub.gusten.gbgcommuter.models.NotificationAction;
+import pub.gusten.gbgcommuter.models.TrackedRoute;
 
 public class NotificationService extends Service {
     private NotificationManager notificationManager;
@@ -31,7 +31,6 @@ public class NotificationService extends Service {
     private String NOTIFICATION_CHANNEL_ID;
     private String NOTIFICATION_CHANNEL_NAME;
 
-    private PendingIntent prevPendingIntent;
     private PendingIntent nextPendingIntent;
     private PendingIntent flipPendingIntent;
 
@@ -60,15 +59,6 @@ public class NotificationService extends Service {
             notificationManager.createNotificationChannel(mChannel);
         }
 
-        // Intent for selecting previous route
-        Intent prevIntent = new Intent(this, TrackerService.class);
-        prevIntent.putExtra("action", NotificationAction.PREVIOUS);
-        prevPendingIntent = PendingIntent.getService(
-                this,
-                0,
-                prevIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT
-        );
         // Intent for selecting next route
         Intent nextIntent = new Intent(this, TrackerService.class);
         nextIntent.putExtra("action", NotificationAction.NEXT);
@@ -99,66 +89,44 @@ public class NotificationService extends Service {
         notificationManager.cancel(NOTIFICATION_ID);
     }
 
-    public void showNotification(String from, String to, List<Departure> departures) {
-        if (departures.isEmpty()) {
-            showNoDepartures(from, to);
-            return;
-        }
-
+    public void showNotification(TrackedRoute route, boolean flipRoute, boolean dataIsFresh) {
         RemoteViews contentView = new RemoteViews(getPackageName(), R.layout.custom_notification);
 
-        // Set time til departure
-        Departure nextDeparture = departures.get(0);
-        LocalDateTime now = LocalDateTime.now();
-        String timeTilDepartureText = Duration.between(now, nextDeparture.getTimeInstant()).toMinutes() + "min";
+        String from = flipRoute ? route.getTo() : route.getFrom();
+        String to = flipRoute ? route.getFrom() : route.getTo();
+        contentView.setTextViewText(R.id.notification_route, from + "  >>  " + to);
 
-        if (departures.size() > 1) {
-            timeTilDepartureText += "  (" + Duration.between(now, departures.get(1).getTimeInstant()).toMinutes() + "min)";
+        if (dataIsFresh) {
+            String updatedAt = DateUtils.timeOnlyFormatter.format(LocalTime.now());
+            contentView.setTextViewText(R.id.notification_updatedAt, "Updated: " + updatedAt);
         }
-        contentView.setTextViewText(R.id.notification_timeTilDeparture, timeTilDepartureText);
 
-        contentView.setInt(R.id.notification_line, "setBackgroundColor", getColorFromHex(nextDeparture.getFgColor().substring(1)));
-        contentView.setTextViewText(R.id.notification_line, nextDeparture.getLine());
-        contentView.setTextColor(R.id.notification_line, getColorFromHex(nextDeparture.getBgColor().substring(1)));
-        contentView.setTextViewText(R.id.notification_route, from + "  >>  " + to);
-        contentView.setTextViewText(R.id.notification_updatedAt, "Updated: " + DateUtils.timeOnlyFormatter.format(LocalTime.now()));
-        contentView.setOnClickPendingIntent(R.id.notification_prevBtn, prevPendingIntent);
-        contentView.setOnClickPendingIntent(R.id.notification_nextBtn, nextPendingIntent);
-        contentView.setOnClickPendingIntent(R.id.notification_flipBtn, flipPendingIntent);
+        if (route.getUpComingDepartures().isEmpty()) {
+            contentView.setViewVisibility(R.id.notification_empty_line, View.VISIBLE);
+            contentView.setViewVisibility(R.id.notification_line, View.INVISIBLE);
 
-        Notification notification = new NotificationCompat.Builder(this)
-                .setChannel(NOTIFICATION_CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_train_24dp)
-                .setContent(contentView)
-                .setVisibility(Notification.VISIBILITY_PUBLIC)
-                .build();
+            contentView.setTextViewText(R.id.notification_timeTilDeparture, "No departures found");
+        }
+        else {
+            contentView.setViewVisibility(R.id.notification_empty_line, View.INVISIBLE);
+            contentView.setViewVisibility(R.id.notification_line, View.VISIBLE);
 
-        startForeground(NOTIFICATION_ID, notification);
-    }
+            // Set time til departure
+            Departure nextDeparture = route.getUpComingDepartures().get(0);
+            LocalDateTime now = LocalDateTime.now();
+            String timeTilDepartureText = Duration.between(now, nextDeparture.getTimeInstant()).toMinutes() + "min";
 
+            if (route.getUpComingDepartures().size() > 1) {
+                timeTilDepartureText += "  (" + Duration.between(now, route.getUpComingDepartures().get(1).getTimeInstant()).toMinutes() + "min)";
+            }
 
-    public void showEmptyNotification() {
-        RemoteViews contentView = new RemoteViews(getPackageName(), R.layout.custom_empty_notification);
-        contentView.setTextViewText(R.id.notification_error, "");
-        contentView.setOnClickPendingIntent(R.id.notification_prevBtn, prevPendingIntent);
-        contentView.setOnClickPendingIntent(R.id.notification_nextBtn, nextPendingIntent);
-        contentView.setOnClickPendingIntent(R.id.notification_flipBtn, flipPendingIntent);
+            contentView.setTextViewText(R.id.notification_timeTilDeparture, timeTilDepartureText);
+            contentView.setInt(R.id.notification_line, "setBackgroundColor", getColorFromHex(nextDeparture.getFgColor().substring(1)));
+            contentView.setTextViewText(R.id.notification_line, nextDeparture.getLine());
+            contentView.setTextColor(R.id.notification_line, getColorFromHex(nextDeparture.getBgColor().substring(1)));
+        }
 
-        Notification notification = new NotificationCompat.Builder(this)
-                .setChannel(NOTIFICATION_CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_train_24dp)
-                .setContent(contentView)
-                .setVisibility(Notification.VISIBILITY_PUBLIC)
-                .build();
-
-        startForeground(NOTIFICATION_ID, notification);
-    }
-
-    private void showNoDepartures(String from, String to) {
-        RemoteViews contentView = new RemoteViews(getPackageName(), R.layout.custom_empty_notification);
-        contentView.setTextViewText(R.id.notification_route, from + "  >>  " + to);
-        contentView.setTextViewText(R.id.notification_error, "No departures found");
-        contentView.setOnClickPendingIntent(R.id.notification_prevBtn, prevPendingIntent);
+        // Set button actions/callbacks
         contentView.setOnClickPendingIntent(R.id.notification_nextBtn, nextPendingIntent);
         contentView.setOnClickPendingIntent(R.id.notification_flipBtn, flipPendingIntent);
 

@@ -42,7 +42,7 @@ public class TrackerService extends Service {
             hasBoundNotification = true;
             NotificationService.LocalBinder mLocalBinder = (NotificationService.LocalBinder)service;
             notificationService = mLocalBinder.getService();
-            notificationService.showEmptyNotification();
+            trackRoute();
         }
     };
 
@@ -87,18 +87,18 @@ public class TrackerService extends Service {
         switch (result) {
             case PREVIOUS:
                 trackedRouteIndex = trackedRouteIndex - 1 < 0 ? trackedRoutes.size() - 1 : trackedRouteIndex - 1;
-                trackRoute(trackedRoutes.get(trackedRouteIndex));
+                trackRoute();
                 break;
             case NEXT:
                 trackedRouteIndex = (trackedRouteIndex + 1) % trackedRoutes.size();
-                trackRoute(trackedRoutes.get(trackedRouteIndex));
+                trackRoute();
                 break;
             case FLIP:
                 flipRoute = !flipRoute;
-                trackRoute(trackedRoutes.get(trackedRouteIndex));
+                trackRoute();
                 break;
             case UPDATE:
-                trackRoute(trackedRoutes.get(trackedRouteIndex));
+                trackRoute();
                 break;
             default:
                 break;
@@ -106,34 +106,37 @@ public class TrackerService extends Service {
         return START_STICKY;
     }
 
-    private void trackRoute(final TrackedRoute route) {
+    private void trackRoute() {
+        if (trackedRoutes.isEmpty() || trackedRoutes.size() <= trackedRouteIndex) {
+            return;
+        }
+
+        TrackedRoute route = trackedRoutes.get(trackedRouteIndex);
         final String fromStopId = flipRoute ? route.getToStopId() : route.getFromStopId();
         final String toStopId = flipRoute ? route.getFromStopId() : route.getToStopId();
-        final String fromName = flipRoute ? route.getTo() : route.getFrom();
-        final String toName = flipRoute ? route.getFrom() : route.getTo();
 
         networkManager.fetchDepartures(fromStopId, toStopId,
                 new NetworkManager.DeparturesRequest() {
                     @Override
                     public void onRequestCompleted(List<Departure> departures) {
-                        List<Departure> trackedDepartures = new ArrayList<>();
+                        route.getUpComingDepartures().clear();
 
                         int index = 0;
                         Iterator<Departure> iterator = departures.iterator();
                         while(index < 2 && iterator.hasNext()) {
                             Departure nextDeparture = iterator.next();
                             if (route.tracks(nextDeparture)) {
-                                trackedDepartures.add(nextDeparture);
+                                route.getUpComingDepartures().add(nextDeparture);
                                 index++;
                             }
                         }
 
-                        notificationService.showNotification(fromName, toName, trackedDepartures);
+                        notificationService.showNotification(route, flipRoute, true);
                     }
 
                     @Override
                     public void onRequestFailed() {
-                        notificationService.showEmptyNotification();
+                        notificationService.showNotification(route, flipRoute, false);
                     }
                 });
     }
