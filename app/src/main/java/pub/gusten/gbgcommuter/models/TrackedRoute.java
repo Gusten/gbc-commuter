@@ -3,25 +3,31 @@ package pub.gusten.gbgcommuter.models;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class TrackedRoute {
     private final String from;
     private final String fromStopId;
-    //private final String fromDirection;
     private final String to;
     private final String toStopId;
-    //private final String toDirection;
     private final String line;
+    private final List<Departure> upComingDepartures;
+
+    //private final String fromDirection;
+    //private final String toDirection;
 
     public TrackedRoute(String from, String fromStopId, String to, String toStopId, String line) {
         this.from = from;
         this.fromStopId = fromStopId;
-        //this.fromDirection = fromDirection;
         this.to = to;
         this.toStopId = toStopId;
-        //this.toDirection = toDirection;
         this.line = line;
+        this.upComingDepartures = new ArrayList<>();
+
+        //this.fromDirection = fromDirection;
+        //this.toDirection = toDirection;
     }
 
     public String getFrom() {
@@ -32,10 +38,6 @@ public class TrackedRoute {
         return fromStopId;
     }
 
-    /*public String getFromDirection() {
-        return fromDirection;
-    }*/
-
     public String getTo() {
         return to;
     }
@@ -44,24 +46,33 @@ public class TrackedRoute {
         return toStopId;
     }
 
-    /*public String getToDirection() {
-        return toDirection;
-    }*/
-
     public String getLine() {
         return line;
     }
+
+    public List<Departure> getUpComingDepartures() {
+        return upComingDepartures;
+    }
+
+    /*public String getFromDirection() {
+        return fromDirection;
+    }
+
+    public String getToDirection() {
+        return toDirection;
+    }*/
 
     public JSONObject toJsonObject() throws JSONException {
         JSONObject jsonObj = new JSONObject();
         jsonObj.put("from", from);
         jsonObj.put("fromStopId", fromStopId);
-        //jsonObj.put("fromDirection", fromDirection);
         jsonObj.put("to", to);
         jsonObj.put("toStopId", toStopId);
-        //jsonObj.put("toDirection", toDirection);
         jsonObj.put("line", line);
         return jsonObj;
+
+        //jsonObj.put("fromDirection", fromDirection);
+        //jsonObj.put("toDirection", toDirection);
     }
 
     public boolean tracks(Departure departure) {
@@ -83,11 +94,13 @@ public class TrackedRoute {
         return "TrackedRoute {" +
                     "from = " + from +
                     ", fromStopId = " + fromStopId +
-                    //", fromDirection = " + fromDirection +
                     ", to = " + to +
                     ", toStopId = " + toStopId +
-                    //", toDirection = " + toDirection +
                     ", line = " + line +
+                    ", nr of upcoming departures = " + upComingDepartures.size() +
                 "}";
+
+        //", fromDirection = " + fromDirection +
+        //", toDirection = " + toDirection +
     }
 }
