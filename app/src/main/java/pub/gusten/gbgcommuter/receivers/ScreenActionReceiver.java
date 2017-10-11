@@ -7,7 +7,7 @@ import android.content.Intent;
 import pub.gusten.gbgcommuter.models.NotificationAction;
 import pub.gusten.gbgcommuter.services.TrackerService;
 
-public class ScreenReceiver extends BroadcastReceiver {
+public class ScreenActionReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {

@@ -92,8 +92,8 @@ public class NotificationService extends Service {
     public void showNotification(TrackedRoute route, boolean flipRoute, boolean dataIsFresh) {
         RemoteViews contentView = new RemoteViews(getPackageName(), R.layout.custom_notification);
 
-        String from = flipRoute ? route.getTo() : route.getFrom();
-        String to = flipRoute ? route.getFrom() : route.getTo();
+        String from = flipRoute ? route.to : route.from;
+        String to = flipRoute ? route.from : route.to;
         contentView.setTextViewText(R.id.notification_route, from + "  >>  " + to);
 
         if (dataIsFresh) {
@@ -114,16 +114,16 @@ public class NotificationService extends Service {
             // Set time til departure
             Departure nextDeparture = route.getUpComingDepartures().get(0);
             LocalDateTime now = LocalDateTime.now();
-            String timeTilDepartureText = Duration.between(now, nextDeparture.getTimeInstant()).toMinutes() + "min";
+            String timeTilDepartureText = Duration.between(now, nextDeparture.timeInstant).toMinutes() + "min";
 
             if (route.getUpComingDepartures().size() > 1) {
-                timeTilDepartureText += "  (" + Duration.between(now, route.getUpComingDepartures().get(1).getTimeInstant()).toMinutes() + "min)";
+                timeTilDepartureText += "  (" + Duration.between(now, route.getUpComingDepartures().get(1).timeInstant).toMinutes() + "min)";
             }
 
             contentView.setTextViewText(R.id.notification_timeTilDeparture, timeTilDepartureText);
-            contentView.setInt(R.id.notification_line, "setBackgroundColor", getColorFromHex(nextDeparture.getFgColor().substring(1)));
-            contentView.setTextViewText(R.id.notification_line, nextDeparture.getLine());
-            contentView.setTextColor(R.id.notification_line, getColorFromHex(nextDeparture.getBgColor().substring(1)));
+            contentView.setInt(R.id.notification_line, "setBackgroundColor", getColorFromHex(nextDeparture.fgColor.substring(1)));
+            contentView.setTextViewText(R.id.notification_line, nextDeparture.line);
+            contentView.setTextColor(R.id.notification_line, getColorFromHex(nextDeparture.bgColor.substring(1)));
         }
 
         // Set button actions/callbacks

@@ -6,11 +6,11 @@ import org.json.JSONObject;
 import java.util.Objects;
 
 public class Route {
-    protected final String from;
-    protected final String fromStopId;
-    protected final String to;
-    protected final String toStopId;
-    protected final String line;
+    public final String from;
+    public final String fromStopId;
+    public final String to;
+    public final String toStopId;
+    public final String line;
 
     public Route(String from, String fromStopId, String to, String toStopId, String line) {
         this.from = from;
@@ -18,26 +18,6 @@ public class Route {
         this.to = to;
         this.toStopId = toStopId;
         this.line = line;
-    }
-
-    public String getFrom() {
-        return from;
-    }
-
-    public String getFromStopId() {
-        return fromStopId;
-    }
-
-    public String getTo() {
-        return to;
-    }
-
-    public String getToStopId() {
-        return toStopId;
-    }
-
-    public String getLine() {
-        return line;
     }
 
     public JSONObject toJsonObject() throws JSONException {
@@ -48,10 +28,6 @@ public class Route {
         jsonObj.put("toStopId", toStopId);
         jsonObj.put("line", line);
         return jsonObj;
-    }
-
-    public boolean tracks(Departure departure) {
-        return getLine().equals(departure.getLine());
     }
 
     @Override

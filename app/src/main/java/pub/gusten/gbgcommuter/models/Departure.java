@@ -7,23 +7,23 @@ import org.threeten.bp.LocalDateTime;
 import pub.gusten.gbgcommuter.helpers.DateUtils;
 
 public class Departure {
-    private final String name;
-    private final String line;
-    private final String type;
-    private final String stopid;
-    private final String stop;
-    private final String time;
-    private final String date;
-    private final String rtTime;
-    private final String rtDate;
-    private final String journeyid;
-    private final String direction;
-    private final String track;
-    private final String fgColor;
-    private final String bgColor;
-    private final String stroke;
-    private final String JourneyDetailRef;
-    private final LocalDateTime timeInstant;
+    public final String name;
+    public final String line;
+    public final String type;
+    public final String stopid;
+    public final String stop;
+    public final String time;
+    public final String date;
+    public final String rtTime;
+    public final String rtDate;
+    public final String journeyid;
+    public final String direction;
+    public final String track;
+    public final String fgColor;
+    public final String bgColor;
+    public final String stroke;
+    public final String JourneyDetailRef;
+    public final LocalDateTime timeInstant;
 
     public Departure(JSONObject jsonObject) throws JSONException {
         name =              jsonObject.getString("name");
@@ -52,54 +52,6 @@ public class Departure {
         }
 
         timeInstant = LocalDateTime.parse(rtDate + " " + rtTime, DateUtils.fullDateFormatter);
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getLine() {
-        return line;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public String getStop() {
-        return stop;
-    }
-
-    public String getTime() {
-        return time;
-    }
-
-    public String getDate() {
-        return date;
-    }
-
-    public String getRtTime() {
-        return rtTime;
-    }
-
-    public String getRtDate() {
-        return rtDate;
-    }
-
-    public String getDirection() {
-        return direction;
-    }
-
-    public String getFgColor() {
-        return fgColor;
-    }
-
-    public String getBgColor() {
-        return bgColor;
-    }
-
-    public LocalDateTime getTimeInstant() {
-        return timeInstant;
     }
 
     @Override

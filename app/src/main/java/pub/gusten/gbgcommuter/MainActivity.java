@@ -1,7 +1,10 @@
 package pub.gusten.gbgcommuter;
 
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -10,29 +13,70 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import pub.gusten.gbgcommuter.models.Route;
+import pub.gusten.gbgcommuter.services.ApiService;
 import pub.gusten.gbgcommuter.services.TrackerService;
 
 public class MainActivity extends AppCompatActivity {
 
 
+    private ApiService apiService;
+    private boolean hasBoundApiService;
+    private ServiceConnection apiConnection = new ServiceConnection() {
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            hasBoundApiService = false;
+        }
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            hasBoundApiService = true;
+            ApiService.LocalBinder mLocalBinder = (ApiService.LocalBinder)service;
+            apiService = mLocalBinder.getService();
+        }
+    };
+
+    private TrackerService tracker;
+    private boolean hasBoundTracker;
+    private ServiceConnection trackerConnection = new ServiceConnection() {
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            hasBoundTracker = false;
+        }
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            hasBoundTracker = true;
+            TrackerService.LocalBinder mLocalBinder = (TrackerService.LocalBinder)service;
+            tracker = mLocalBinder.getService();
+        }
+    };
+
+    private boolean routeSelected;
+    private Route selectedRoute;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Set ui components
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        startService(new Intent(this, TrackerService.class));
-
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+        fab.setOnClickListener(view -> {
+            if (routeSelected && hasBoundTracker) {
+                tracker.startTracking(selectedRoute);
             }
         });
+
+        // Start necessary services
+        startService(new Intent(this, TrackerService.class));
+        bindService(new Intent(this, TrackerService.class), trackerConnection, BIND_AUTO_CREATE);
+
+        startService(new Intent(this, ApiService.class));
+        bindService(new Intent(this, ApiService.class), apiConnection, BIND_AUTO_CREATE);
     }
 
     @Override

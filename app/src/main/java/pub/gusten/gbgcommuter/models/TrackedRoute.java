@@ -1,14 +1,16 @@
 package pub.gusten.gbgcommuter.models;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 public class TrackedRoute extends Route {
     private final List<Departure> upComingDepartures;
+
+    public TrackedRoute(Route route) {
+        super(route.from, route.fromStopId, route.to, route.toStopId, route.line);
+        this.upComingDepartures = new ArrayList<>();
+    }
 
     public TrackedRoute(String from, String fromStopId, String to, String toStopId, String line) {
         super(from, fromStopId, to, toStopId, line);
@@ -20,7 +22,7 @@ public class TrackedRoute extends Route {
     }
 
     public boolean tracks(Departure departure) {
-        return getLine().equals(departure.getLine());
+        return line.equals(departure.line);
     }
 
     @Override
@@ -44,8 +46,5 @@ public class TrackedRoute extends Route {
                     ", line = " + line +
                     ", nr of upcoming departures = " + upComingDepartures.size() +
                 "}";
-
-        //", fromDirection = " + fromDirection +
-        //", toDirection = " + toDirection +
     }
 }

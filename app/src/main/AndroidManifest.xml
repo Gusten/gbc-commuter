@@ -28,5 +28,6 @@
         </receiver>
         <service android:name=".services.TrackerService" />
         <service android:name=".services.NotificationService" />
+        <service android:name=".services.ApiService" />
     </application>
 </manifest>

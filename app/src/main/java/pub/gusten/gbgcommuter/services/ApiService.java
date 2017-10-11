@@ -1,6 +1,11 @@
-package pub.gusten.gbgcommuter;
+package pub.gusten.gbgcommuter.services;
 
+import android.app.Service;
 import android.content.Context;
+import android.content.Intent;
+import android.os.Binder;
+import android.os.IBinder;
+import android.support.annotation.Nullable;
 import android.util.Base64;
 
 import com.android.volley.AuthFailureError;
@@ -21,10 +26,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import pub.gusten.gbgcommuter.R;
 import pub.gusten.gbgcommuter.helpers.DateUtils;
 import pub.gusten.gbgcommuter.models.Departure;
 
-public class NetworkManager {
+public class ApiService extends Service {
 
     public interface DeparturesRequest {
         void onRequestCompleted(List<Departure> departures);
@@ -38,15 +44,28 @@ public class NetworkManager {
     private final String tokenUrl = "https://api.vasttrafik.se:443/token";
     private final String departureUrl = "https://api.vasttrafik.se/bin/rest.exe/v2/departureBoard";
 
-    private Context context;
     private String authStr;
     private String accessToken;
     private Instant expirationDate;
 
-    public NetworkManager(Context context) {
-        this.context = context;
-        authStr = context.getResources().getString(R.string.vasttrafik_key) + ":"
-                + context.getResources().getString(R.string.vasttrafik_secret);
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        return mBinder;
+    }
+
+    private final IBinder mBinder = new ApiService.LocalBinder();
+
+    public class LocalBinder extends Binder {
+        public ApiService getService() {
+            return ApiService.this;
+        }
+    }
+
+    @Override
+    public void onCreate() {
+        authStr = getResources().getString(R.string.vasttrafik_key) + ":"
+                + getResources().getString(R.string.vasttrafik_secret);
         authStr = Base64.encodeToString(authStr.getBytes(), Base64.DEFAULT);
         expirationDate = Instant.now();
         fetchAccessToken(new AccessTokenCallback() {
@@ -58,8 +77,13 @@ public class NetworkManager {
         });
     }
 
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        return START_STICKY;
+    }
+
     private void fetchAccessToken(final AccessTokenCallback callback) {
-        RequestQueue queue = Volley.newRequestQueue(context);
+        RequestQueue queue = Volley.newRequestQueue(this);
 
         StringRequest stringRequest = new StringRequest(
             Request.Method.POST,
@@ -137,7 +161,7 @@ public class NetworkManager {
                 "&direction=" + toStopId +
                 "&format=json";
 
-        RequestQueue queue = Volley.newRequestQueue(context);
+        RequestQueue queue = Volley.newRequestQueue(this);
 
         StringRequest stringRequest = new StringRequest(
                 Request.Method.GET,
@@ -150,7 +174,7 @@ public class NetworkManager {
                         for (int i = 0; i < jsonArray.length(); i++) {
                             Departure tmp = new Departure(jsonArray.getJSONObject(i));
                             // Sometimes old objects sneaks through. Throw em away
-                            if (tmp.getTimeInstant().isBefore(now)) {
+                            if (tmp.timeInstant.isBefore(now)) {
                                 continue;
                             }
                             departures.add(tmp);
