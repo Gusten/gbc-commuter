@@ -9,4 +9,9 @@
     tools:showIn="@layout/activity_main"
     tools:context="pub.gusten.gbgcommuter.MainActivity">
 
+    <ListView
+        android:id="@+id/available_routes_list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"></ListView>
+
 </android.support.constraint.ConstraintLayout>

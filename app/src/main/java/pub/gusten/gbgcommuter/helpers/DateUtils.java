@@ -1,4 +1,4 @@
-package pub.gusten.gbgcommuter;
+package pub.gusten.gbgcommuter.helpers;
 
 import org.threeten.bp.format.DateTimeFormatter;
 

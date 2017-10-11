@@ -15,7 +15,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import pub.gusten.gbgcommuter.NetworkManager;
-import pub.gusten.gbgcommuter.ScreenReceiver;
+import pub.gusten.gbgcommuter.receivers.ScreenReceiver;
 import pub.gusten.gbgcommuter.models.Departure;
 import pub.gusten.gbgcommuter.models.NotificationAction;
 import pub.gusten.gbgcommuter.models.TrackedRoute;

@@ -1,4 +1,4 @@
-package pub.gusten.gbgcommuter;
+package pub.gusten.gbgcommuter.receivers;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

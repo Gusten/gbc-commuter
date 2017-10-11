@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import pub.gusten.gbgcommuter.helpers.DateUtils;
 import pub.gusten.gbgcommuter.models.Departure;
 
 public class NetworkManager {

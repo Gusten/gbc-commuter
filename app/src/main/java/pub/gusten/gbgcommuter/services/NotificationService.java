@@ -19,7 +19,7 @@ import org.threeten.bp.Duration;
 import org.threeten.bp.LocalDateTime;
 import org.threeten.bp.LocalTime;
 
-import pub.gusten.gbgcommuter.DateUtils;
+import pub.gusten.gbgcommuter.helpers.DateUtils;
 import pub.gusten.gbgcommuter.R;
 import pub.gusten.gbgcommuter.models.Departure;
 import pub.gusten.gbgcommuter.models.NotificationAction;

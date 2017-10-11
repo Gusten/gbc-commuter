@@ -4,7 +4,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.threeten.bp.LocalDateTime;
 
-import pub.gusten.gbgcommuter.DateUtils;
+import pub.gusten.gbgcommuter.helpers.DateUtils;
 
 public class Departure {
     private final String name;
