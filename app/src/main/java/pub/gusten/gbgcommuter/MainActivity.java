@@ -10,7 +10,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.AutoCompleteTextView;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -89,10 +92,16 @@ public class MainActivity extends AppCompatActivity {
         AutoCompleteTextView fromSelector = (AutoCompleteTextView)findViewById(R.id.main_from_location);
         fromSelector.setAdapter(adapter);
         fromSelector.setThreshold(1);
+        fromSelector.setOnItemClickListener((parent, arg1, pos, id) -> {
+            Toast.makeText(this,adapter.getItem(pos).id + "", Toast.LENGTH_LONG).show();
+        });
 
         AutoCompleteTextView toSelector = (AutoCompleteTextView)findViewById(R.id.main_to_location);
         toSelector.setAdapter(adapter);
         toSelector.setThreshold(1);
+        toSelector.setOnItemClickListener((parent, arg1, pos, id) -> {
+            Toast.makeText(this,adapter.getItem(pos).id + "", Toast.LENGTH_LONG).show();
+        });
 
         // Start necessary services
         startService(new Intent(this, TrackerService.class));

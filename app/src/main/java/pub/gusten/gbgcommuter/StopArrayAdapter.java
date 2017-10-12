@@ -47,7 +47,7 @@ public class StopArrayAdapter extends ArrayAdapter<Stop> {
          View rowView = mInflater.inflate(android.R.layout.simple_list_item_1, parent, false);
 
         TextView name = rowView.findViewById(android.R.id.text1);
-        name.setText(filteredStops.get(position).name);
+        name.setText(filteredStops.get(position).name.replace(",", ", "));
 
         return rowView;
     }
@@ -60,16 +60,16 @@ public class StopArrayAdapter extends ArrayAdapter<Stop> {
     private final Filter nameFilter = new Filter() {
         @Override
         public CharSequence convertResultToString(Object result) {
-            return ((Stop)result).name;
+            return ((Stop)result).name.replace(",", ", ");
         }
 
         @Override
-        protected FilterResults performFiltering(CharSequence constraint) {
+        protected FilterResults performFiltering(CharSequence prefix) {
             FilterResults filterResults = new FilterResults();
             ArrayList<Stop> tempList = new ArrayList<>();
-            if(constraint != null && constraint.length() > 1) {
+            if(prefix != null && prefix.length() > 0) {
                 for (Stop stop : stops) {
-                    if (stop.name.toLowerCase().contains(constraint.toString().toLowerCase())) {
+                    if (stop.name.toLowerCase().startsWith(prefix.toString().toLowerCase())) {
                         tempList.add(stop);
                     }
                 }

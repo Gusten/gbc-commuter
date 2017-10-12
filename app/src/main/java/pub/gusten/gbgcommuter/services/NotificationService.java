@@ -130,12 +130,24 @@ public class NotificationService extends Service {
         contentView.setOnClickPendingIntent(R.id.notification_nextBtn, nextPendingIntent);
         contentView.setOnClickPendingIntent(R.id.notification_flipBtn, flipPendingIntent);
 
-        Notification notification = new NotificationCompat.Builder(this)
+        Notification notification;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            notification = new Notification.Builder(this)
+                    .setChannelId(NOTIFICATION_CHANNEL_ID)
+                    .setSmallIcon(R.drawable.ic_train_24dp)
+                    .setContent(contentView)
+                    .setVisibility(Notification.VISIBILITY_PUBLIC)
+                    .build();
+        }
+        else {
+            notification = new NotificationCompat.Builder(this)
                 .setChannel(NOTIFICATION_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_train_24dp)
                 .setContent(contentView)
                 .setVisibility(Notification.VISIBILITY_PUBLIC)
                 .build();
+        }
 
         startForeground(NOTIFICATION_ID, notification);
     }
