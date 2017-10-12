@@ -79,68 +79,31 @@ public class MainActivity extends AppCompatActivity {
     private Stop selectedFrom;
     private Stop selectedTo;
     private Departure selectedDeparture;
+    private Dialog trackNewModal;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // Set ui components
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Load locations from JSON file
+        availableStops = loadAvailableStopsFromFile();
+
+        // Build modal for track new routes
+        trackNewModal = buildTrackNewModal();
+
+        // Load UI components
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(view -> {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            LayoutInflater layoutInflater = LayoutInflater.from(MainActivity.this);
-            View modalView = layoutInflater.inflate(R.layout.modal_track_route, null);
+            trackNewModal.show();
 
-            builder.setView(modalView)
-                    .setPositiveButton(R.string.modal_save, (dialog, id) -> {
-                        if (hasBoundTracker && selectedDeparture != null && selectedFrom != null && selectedTo != null) {
-                            tracker.startTracking(new TrackedRoute(selectedFrom.name, Long.toString(selectedFrom.id), selectedTo.name, Long.toString(selectedTo.id), selectedDeparture.line, selectedDeparture.bgColor, selectedDeparture.fgColor));
-                            listTrackedRoutes();
-                        }
-                        selectedTo = null;
-                        selectedFrom = null;
-                        selectedDeparture = null;
-                    })
-                    .setNegativeButton(R.string.modal_cancel, (dialog, id) -> {
-                        selectedTo = null;
-                        selectedFrom = null;
-                        selectedDeparture = null;
-                        dialog.cancel();
-                    });
-
-            Dialog dialog = builder.create();
-
-            StopArrayAdapter adapter = new StopArrayAdapter(this, android.R.layout.simple_list_item_1, availableStops);
-
-            AutoCompleteTextView fromSelector = modalView.findViewById(R.id.modal_from);
-            fromSelector.setAdapter(adapter);
-            fromSelector.setThreshold(1);
-            fromSelector.setOnItemClickListener((parent, arg1, pos, id) -> {
-                selectedFrom = adapter.getItem(pos);
-                listLines(modalView, (AlertDialog)dialog);
-            });
-
-            AutoCompleteTextView toSelector = modalView.findViewById(R.id.modal_to);
-            toSelector.setAdapter(adapter);
-            toSelector.setThreshold(1);
-            toSelector.setOnItemClickListener((parent, arg1, pos, id) -> {
-                selectedTo = adapter.getItem(pos);
-                listLines(modalView, (AlertDialog)dialog);
-            });
-
-            dialog.show();
-
-            ((AlertDialog)dialog).getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+            ((AlertDialog)trackNewModal).getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
         });
 
-        // Load locations from JSON file
-        loadLocations();
-
-        // Start necessary services
+        // Start and bind necessary services
         startService(new Intent(this, TrackerService.class));
         bindService(new Intent(this, TrackerService.class), trackerConnection, BIND_AUTO_CREATE);
 
@@ -188,7 +151,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        apiService.fetchDepartures(Long.toString(selectedFrom.id), Long.toString(selectedTo.id), new ApiService.DeparturesRequest() {
+        apiService.fetchDepartures(selectedFrom.id, selectedTo.id, new ApiService.DeparturesRequest() {
             @Override
             public void onRequestCompleted(List<Departure> departures) {
                 List<Departure> filteredDepartures = new ArrayList<>();
@@ -224,9 +187,8 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void loadLocations() {
-        availableStops = new ArrayList<>();
-
+    private List<Stop> loadAvailableStopsFromFile() {
+        List<Stop> availableStops = new ArrayList<>();
         try {
             InputStream inputStream = getAssets().open("locations.json");
             int size = inputStream.available();
@@ -252,5 +214,61 @@ public class MainActivity extends AppCompatActivity {
         } catch (IOException | JSONException ex) {
             ex.printStackTrace();
         }
+        return availableStops;
+    }
+
+    private Dialog buildTrackNewModal() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        LayoutInflater layoutInflater = LayoutInflater.from(MainActivity.this);
+        View modalView = layoutInflater.inflate(R.layout.modal_track_route, null);
+
+        builder.setView(modalView)
+                .setPositiveButton(R.string.modal_save, (dialog, id) -> {
+                    if (hasBoundTracker && selectedDeparture != null && selectedFrom != null && selectedTo != null) {
+                        tracker.startTracking(
+                            new TrackedRoute(
+                                selectedFrom.name,
+                                selectedFrom.id,
+                                selectedTo.name,
+                                selectedTo.id,
+                                selectedDeparture.line,
+                                selectedDeparture.bgColor,
+                                selectedDeparture.fgColor
+                            )
+                        );
+                        listTrackedRoutes();
+                    }
+                    selectedTo = null;
+                    selectedFrom = null;
+                    selectedDeparture = null;
+                })
+                .setNegativeButton(R.string.modal_cancel, (dialog, id) -> {
+                    selectedTo = null;
+                    selectedFrom = null;
+                    selectedDeparture = null;
+                    dialog.cancel();
+                });
+
+        Dialog dialog = builder.create();
+
+        StopArrayAdapter adapter = new StopArrayAdapter(this, android.R.layout.simple_list_item_1, availableStops);
+
+        AutoCompleteTextView fromSelector = modalView.findViewById(R.id.modal_from);
+        fromSelector.setAdapter(adapter);
+        fromSelector.setThreshold(1);
+        fromSelector.setOnItemClickListener((parent, arg1, pos, id) -> {
+            selectedFrom = adapter.getItem(pos);
+            listLines(modalView, (AlertDialog)dialog);
+        });
+
+        AutoCompleteTextView toSelector = modalView.findViewById(R.id.modal_to);
+        toSelector.setAdapter(adapter);
+        toSelector.setThreshold(1);
+        toSelector.setOnItemClickListener((parent, arg1, pos, id) -> {
+            selectedTo = adapter.getItem(pos);
+            listLines(modalView, (AlertDialog)dialog);
+        });
+
+        return dialog;
     }
 }

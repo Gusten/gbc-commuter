@@ -124,7 +124,7 @@ public class ApiService extends Service {
         queue.add(stringRequest);
     }
 
-    public void fetchDepartures(final String fromStopId, final String toStopId, final DeparturesRequest callback) {
+    public void fetchDepartures(final long fromStopId, final long toStopId, final DeparturesRequest callback) {
         // Check if we need to refresh access token
         if(Instant.now().isAfter(tokenExpirationDate)) {
             fetchAccessToken(new AccessTokenCallback() {
@@ -152,7 +152,7 @@ public class ApiService extends Service {
         }
     }
 
-    private void mFetchDepartures(String fromStopId, String toStopId, final DeparturesRequest callback) throws UnsupportedEncodingException {
+    private void mFetchDepartures(final long fromStopId, final long toStopId, final DeparturesRequest callback) throws UnsupportedEncodingException {
         final LocalDateTime now = LocalDateTime.now();
         String requestQuery = "?id=" + fromStopId +
                 "&date=" + now.format(DateUtils.dateOnlyFormatter) +

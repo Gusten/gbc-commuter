@@ -9,15 +9,15 @@ import java.util.Objects;
 
 public class TrackedRoute {
     public final String from;
-    public final String fromStopId;
+    public final long fromStopId;
     public final String to;
-    public final String toStopId;
+    public final long toStopId;
     public final String line;
     public final String bgColor;
     public final String fgColor;
     public final List<Departure> upComingDepartures;
 
-    public TrackedRoute(String from, String fromStopId, String to, String toStopId, String line, String bgColor, String fgColor) {
+    public TrackedRoute(String from, long fromStopId, String to, long toStopId, String line, String bgColor, String fgColor) {
         this.from = from;
         this.fromStopId = fromStopId;
         this.to = to;

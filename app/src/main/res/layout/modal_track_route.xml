@@ -36,7 +36,7 @@
         android:hint="@string/modal_to_hint" />
     <Spinner
         android:id="@+id/modal_line_spinner"
-        android:layout_width="80dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center">
     </Spinner>

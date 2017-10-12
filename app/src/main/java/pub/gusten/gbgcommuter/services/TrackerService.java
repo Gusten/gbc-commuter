@@ -105,9 +105,9 @@ public class TrackerService extends Service {
                 JSONObject tmpObj = tmpArray.getJSONObject(i);
                 trackedRoutes.add(new TrackedRoute(
                     tmpObj.getString("from"),
-                    tmpObj.getString("fromStopId"),
+                    tmpObj.getLong("fromStopId"),
                     tmpObj.getString("to"),
-                    tmpObj.getString("toStopId"),
+                    tmpObj.getLong("toStopId"),
                     tmpObj.getString("line"),
                     tmpObj.getString("bgColor"),
                     tmpObj.getString("fgColor")
@@ -201,8 +201,8 @@ public class TrackerService extends Service {
         }
 
         TrackedRoute route = trackedRoutes.get(trackedRouteIndex);
-        final String fromStopId = flipRoute ? route.toStopId : route.fromStopId;
-        final String toStopId = flipRoute ? route.fromStopId : route.toStopId;
+        final long fromStopId = flipRoute ? route.toStopId : route.fromStopId;
+        final long toStopId = flipRoute ? route.fromStopId : route.toStopId;
 
         // Remove departures that have already left
         LocalDateTime timeNow = LocalDateTime.now();
