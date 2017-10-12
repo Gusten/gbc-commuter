@@ -156,6 +156,7 @@ public class TrackerService extends Service {
             trackedRoutes.add(tmp);
             updateLocalStorage();
         }
+        trackRoute();
     }
 
     public void stopTracking(Route route) {
