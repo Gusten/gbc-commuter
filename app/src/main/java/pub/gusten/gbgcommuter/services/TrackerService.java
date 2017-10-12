@@ -13,6 +13,7 @@ import android.support.annotation.Nullable;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -91,10 +92,26 @@ public class TrackerService extends Service {
         bindService(new Intent(this, ApiService.class), apiServiceConnection, BIND_AUTO_CREATE);
 
         trackedRoutes = new ArrayList<>();
-        trackedRoutes.add(new TrackedRoute("Elisedal,Göteborg", "9021014002210000", "Valand,Göteborg", "9021014007220000", "4"));
-        trackedRoutes.add(new TrackedRoute("Pilbågsgatan,Göteborg", "9021014005280000", "Vasaplatsen,Göteborg", "9021014007300000", "19"));
-        //trackedRoutes.add(new TrackedRoute("Hjalmar Brantingsplatsen", "9021014003180000", "Vasaplatsen", "9021014007300000", "10"));
         trackedRouteIndex = 0;
+
+        // Fetch tracked routes from shared prefs
+        SharedPreferences prefs = getSharedPreferences(PREFS_REF, MODE_PRIVATE);
+        String storedJsonRoutes = prefs.getString(PREFS_NAME, "[]");
+        try {
+            JSONArray tmpArray = new JSONArray(storedJsonRoutes);
+            for(int i = 0; i < tmpArray.length(); i++) {
+                JSONObject tmpObj = tmpArray.getJSONObject(i);
+                trackedRoutes.add(new TrackedRoute(
+                    tmpObj.getString("from"),
+                    tmpObj.getString("fromStopId"),
+                    tmpObj.getString("to"),
+                    tmpObj.getString("toStopId"),
+                    tmpObj.getString("line")
+                ));
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
 
         final IntentFilter intentFilter = new IntentFilter(Intent.ACTION_SCREEN_ON);
         screenReceiver = new ScreenActionReceiver();
