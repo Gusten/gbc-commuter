@@ -1,4 +1,4 @@
-package pub.gusten.gbgcommuter;
+package pub.gusten.gbgcommuter.adapters;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -19,7 +19,7 @@ public class StopArrayAdapter extends ArrayAdapter<Stop> {
     private List<Stop> stops;
     private List<Stop> filteredStops;
 
-    StopArrayAdapter(Context mContext, int textViewResourceId, List<Stop> stops) {
+    public StopArrayAdapter(Context mContext, int textViewResourceId, List<Stop> stops) {
         super(mContext, textViewResourceId, stops);
         this.mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         this.filteredStops = stops;

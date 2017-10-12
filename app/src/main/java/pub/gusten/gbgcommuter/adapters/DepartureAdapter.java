@@ -1,4 +1,4 @@
-package pub.gusten.gbgcommuter;
+package pub.gusten.gbgcommuter.adapters;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -9,6 +9,7 @@ import android.widget.TextView;
 
 import java.util.List;
 
+import pub.gusten.gbgcommuter.R;
 import pub.gusten.gbgcommuter.models.Departure;
 
 import static pub.gusten.gbgcommuter.helpers.ColorUtils.getColorFromHex;

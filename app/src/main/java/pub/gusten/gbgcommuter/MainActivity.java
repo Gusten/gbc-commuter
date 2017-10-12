@@ -23,6 +23,8 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import pub.gusten.gbgcommuter.adapters.DepartureAdapter;
+import pub.gusten.gbgcommuter.adapters.StopArrayAdapter;
 import pub.gusten.gbgcommuter.models.Departure;
 import pub.gusten.gbgcommuter.models.Route;
 import pub.gusten.gbgcommuter.models.Stop;
