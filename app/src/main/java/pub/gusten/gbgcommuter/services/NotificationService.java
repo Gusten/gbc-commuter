@@ -25,6 +25,8 @@ import pub.gusten.gbgcommuter.models.Departure;
 import pub.gusten.gbgcommuter.models.NotificationAction;
 import pub.gusten.gbgcommuter.models.TrackedRoute;
 
+import static pub.gusten.gbgcommuter.helpers.ColorUtils.getColorFromHex;
+
 public class NotificationService extends Service {
     private NotificationManager notificationManager;
     private final int NOTIFICATION_ID = R.integer.notification_id;
@@ -122,8 +124,8 @@ public class NotificationService extends Service {
 
             contentView.setTextViewText(R.id.notification_timeTilDeparture, timeTilDepartureText);
             contentView.setInt(R.id.notification_line, "setBackgroundColor", getColorFromHex(nextDeparture.fgColor.substring(1)));
-            contentView.setTextViewText(R.id.notification_line, nextDeparture.line);
             contentView.setTextColor(R.id.notification_line, getColorFromHex(nextDeparture.bgColor.substring(1)));
+            contentView.setTextViewText(R.id.notification_line, nextDeparture.line);
         }
 
         // Set button actions/callbacks
@@ -150,13 +152,5 @@ public class NotificationService extends Service {
         }
 
         startForeground(NOTIFICATION_ID, notification);
-    }
-
-    private int getColorFromHex(String colorString) {
-        int color = (int)Long.parseLong(colorString, 16);
-        int r = (color >> 16) & 0xFF;
-        int g = (color >> 8) & 0xFF;
-        int b = (color >> 0) & 0xFF;
-        return Color.rgb(r, g, b);
     }
 }

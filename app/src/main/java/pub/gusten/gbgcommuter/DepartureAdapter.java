@@ -1,38 +1,39 @@
 package pub.gusten.gbgcommuter;
 
 import android.content.Context;
-import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
-import java.util.ArrayList;
+import java.util.List;
 
-import pub.gusten.gbgcommuter.models.Route;
+import pub.gusten.gbgcommuter.models.Departure;
 
-public class RouteAdapter extends BaseAdapter {
+import static pub.gusten.gbgcommuter.helpers.ColorUtils.getColorFromHex;
+
+public class DepartureAdapter extends BaseAdapter {
     private Context mContext;
     private LayoutInflater mInflater;
-    private ArrayList<Route> routes;
+    private List<Departure> departures;
 
-    public RouteAdapter(Context mContext, ArrayList<Route> routes) {
+    public DepartureAdapter(Context mContext, List<Departure> departures) {
         this.mContext = mContext;
         this.mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);;
-        this.routes = routes;
+        this.departures = departures;
 
         // https://api.vasttrafik.se/bin/rest.exe/v2/trip?originId=9021014002210000&destId=9021014007220000&maxChanges=0&format=json
     }
 
     @Override
     public int getCount() {
-        return routes.size();
+        return departures.size();
     }
 
     @Override
-    public Route getItem(int position) {
-        return routes.get(position);
+    public Departure getItem(int position) {
+        return departures.get(position);
     }
 
     @Override
@@ -44,13 +45,15 @@ public class RouteAdapter extends BaseAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
         View rowView = mInflater.inflate(R.layout.route_list_item, parent, false);
 
-        Route route = getItem(position);
+        Departure departure = getItem(position);
 
         TextView lineNumber = rowView.findViewById(R.id.route_list_line);
-        lineNumber.setText(route.line);
+        lineNumber.setText(departure.line);
+        lineNumber.setTextColor(getColorFromHex(departure.bgColor.substring(1)));
+        lineNumber.setBackgroundColor(getColorFromHex(departure.fgColor.substring(1)));
 
         TextView name = rowView.findViewById(R.id.route_list_name);
-        lineNumber.setText("What to show here I wonder");
+        name.setText("What to show here I wonder");
 
         return rowView;
     }

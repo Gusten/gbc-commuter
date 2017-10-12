@@ -91,8 +91,8 @@ public class TrackerService extends Service {
         bindService(new Intent(this, ApiService.class), apiServiceConnection, BIND_AUTO_CREATE);
 
         trackedRoutes = new ArrayList<>();
-        trackedRoutes.add(new TrackedRoute("Elisedal", "9021014002210000", "Valand", "9021014007220000", "4"));
-        trackedRoutes.add(new TrackedRoute("Pilbågsgatan", "9021014005280000", "Vasaplatsen", "9021014007300000", "19"));
+        trackedRoutes.add(new TrackedRoute("Elisedal,Göteborg", "9021014002210000", "Valand,Göteborg", "9021014007220000", "4"));
+        trackedRoutes.add(new TrackedRoute("Pilbågsgatan,Göteborg", "9021014005280000", "Vasaplatsen,Göteborg", "9021014007300000", "19"));
         //trackedRoutes.add(new TrackedRoute("Hjalmar Brantingsplatsen", "9021014003180000", "Vasaplatsen", "9021014007300000", "10"));
         trackedRouteIndex = 0;
 
@@ -134,19 +134,21 @@ public class TrackerService extends Service {
     }
 
     public void startTracking(Route route) {
-        trackedRoutes.add(new TrackedRoute(route));
-        updateLocalStorage();
+        TrackedRoute tmp = new TrackedRoute(route);
+        if (!trackedRoutes.contains(tmp)) {
+            trackedRoutes.add(tmp);
+            updateLocalStorage();
+        }
     }
 
     public void stopTracking(Route route) {
         for (Route trackedRoute : trackedRoutes) {
             if (route.equals(trackedRoute)) {
                 trackedRoutes.remove(trackedRoute);
+                updateLocalStorage();
                 break;
             }
         }
-
-        updateLocalStorage();
     }
 
     private void updateLocalStorage() {

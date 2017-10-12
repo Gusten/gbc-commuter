@@ -1,6 +1,7 @@
 package pub.gusten.gbgcommuter;
 
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
@@ -13,6 +14,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AutoCompleteTextView;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import org.json.JSONArray;
@@ -65,11 +67,10 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    private boolean routeSelected;
-    private Route selectedRoute;
     private List<Stop> availableStops;
     private Stop selectedFrom;
     private Stop selectedTo;
+    private Departure selectedDeparture;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,8 +83,8 @@ public class MainActivity extends AppCompatActivity {
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(view -> {
-            if (routeSelected && hasBoundTracker) {
-                tracker.startTracking(selectedRoute);
+            if (hasBoundTracker && selectedDeparture != null && selectedFrom != null && selectedTo != null) {
+                tracker.startTracking(new Route(selectedFrom.name, Long.toString(selectedFrom.id), selectedTo.name, Long.toString(selectedTo.id), selectedDeparture.line));
             }
         });
 
@@ -143,10 +144,16 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+        final Context contextRef = this;
         apiService.fetchDepartures(Long.toString(selectedFrom.id), Long.toString(selectedTo.id), new ApiService.DeparturesRequest() {
             @Override
             public void onRequestCompleted(List<Departure> departures) {
-                List<Departure> tmp = departures;
+                ListView listView = (ListView) findViewById(R.id.available_routes_list);
+                DepartureAdapter adapter = new DepartureAdapter(contextRef, departures);
+                listView.setAdapter(adapter);
+                listView.setOnItemClickListener((parent, view, position, id) -> {
+                    selectedDeparture = adapter.getItem(position);
+                });
             }
 
             @Override

@@ -32,8 +32,7 @@ public class TrackedRoute extends Route {
         TrackedRoute otherTrackedRoute = (TrackedRoute) o;
         return Objects.equals(from, otherTrackedRoute.from) &&
                 Objects.equals(to, otherTrackedRoute.to) &&
-                Objects.equals(line, otherTrackedRoute.line) &&
-                upComingDepartures == otherTrackedRoute.upComingDepartures;
+                Objects.equals(line, otherTrackedRoute.line);
     }
 
     @Override

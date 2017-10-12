@@ -1,5 +1,7 @@
 package pub.gusten.gbgcommuter.models;
 
+import android.util.Log;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -35,6 +37,9 @@ public class Route {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Route otherRoute = (TrackedRoute) o;
+        boolean tst = Objects.equals(from, otherRoute.from);
+        boolean tst2 = Objects.equals(to, otherRoute.to);
+        boolean tst3 = Objects.equals(line, otherRoute.line);
         return Objects.equals(from, otherRoute.from) &&
                 Objects.equals(to, otherRoute.to) &&
                 Objects.equals(line, otherRoute.line);
