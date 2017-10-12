@@ -93,8 +93,8 @@ public class NotificationService extends Service {
     public void showNotification(TrackedRoute route, boolean flipRoute, boolean dataIsFresh) {
         RemoteViews contentView = new RemoteViews(getPackageName(), R.layout.custom_notification);
 
-        String from = flipRoute ? route.to : route.from;
-        String to = flipRoute ? route.from : route.to;
+        String from = getNameWithoutArea(flipRoute ? route.to : route.from);
+        String to = getNameWithoutArea(flipRoute ? route.from : route.to);
         contentView.setTextViewText(R.id.notification_route, from + "  >>  " + to);
 
         if (dataIsFresh) {
@@ -102,7 +102,7 @@ public class NotificationService extends Service {
             contentView.setTextViewText(R.id.notification_updatedAt, "Updated: " + updatedAt);
         }
 
-        if (route.getUpComingDepartures().isEmpty()) {
+        if (route.upComingDepartures.isEmpty()) {
             contentView.setViewVisibility(R.id.notification_empty_line, View.VISIBLE);
             contentView.setViewVisibility(R.id.notification_line, View.INVISIBLE);
 
@@ -113,12 +113,20 @@ public class NotificationService extends Service {
             contentView.setViewVisibility(R.id.notification_line, View.VISIBLE);
 
             // Set time til departure
-            Departure nextDeparture = route.getUpComingDepartures().get(0);
+            Departure nextDeparture = route.upComingDepartures.get(0);
             LocalDateTime now = LocalDateTime.now();
-            String timeTilDepartureText = Duration.between(now, nextDeparture.timeInstant).toMinutes() + "min";
 
-            if (route.getUpComingDepartures().size() > 1) {
-                timeTilDepartureText += "  (" + Duration.between(now, route.getUpComingDepartures().get(1).timeInstant).toMinutes() + "min)";
+            String timeTilDepartureText = "";
+            long minutesTilDeparture = Duration.between(now, nextDeparture.timeInstant).toMinutes();
+            if (minutesTilDeparture <= 0) {
+                timeTilDepartureText += "<1min";
+            }
+            else {
+                timeTilDepartureText += minutesTilDeparture + "min";
+            }
+
+            if (route.upComingDepartures.size() > 1) {
+                timeTilDepartureText += "  (" + Duration.between(now, route.upComingDepartures.get(1).timeInstant).toMinutes() + "min)";
             }
 
             contentView.setTextViewText(R.id.notification_timeTilDeparture, timeTilDepartureText);
@@ -151,5 +159,9 @@ public class NotificationService extends Service {
         }
 
         startForeground(NOTIFICATION_ID, notification);
+    }
+
+    private String getNameWithoutArea(String fullName) {
+        return fullName.split(",")[0];
     }
 }

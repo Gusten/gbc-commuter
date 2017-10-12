@@ -14,10 +14,13 @@ import android.support.annotation.Nullable;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.threeten.bp.Instant;
+import org.threeten.bp.LocalDateTime;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import pub.gusten.gbgcommuter.models.Route;
 import pub.gusten.gbgcommuter.receivers.ScreenActionReceiver;
@@ -197,18 +200,26 @@ public class TrackerService extends Service {
         final String fromStopId = flipRoute ? route.toStopId : route.fromStopId;
         final String toStopId = flipRoute ? route.fromStopId : route.toStopId;
 
+        // Remove departures that have already left
+        LocalDateTime timeNow = LocalDateTime.now();
+        for (int i = route.upComingDepartures.size() - 1; i >= 0; i--) {
+            if (timeNow.isAfter(route.upComingDepartures.get(i).timeInstant)) {
+                route.upComingDepartures.remove(i);
+            }
+        }
+
         apiService.fetchDepartures(fromStopId, toStopId,
                 new ApiService.DeparturesRequest() {
                     @Override
                     public void onRequestCompleted(List<Departure> departures) {
-                        route.getUpComingDepartures().clear();
+                        route.upComingDepartures.clear();
 
                         int index = 0;
                         Iterator<Departure> iterator = departures.iterator();
                         while(index < 2 && iterator.hasNext()) {
                             Departure nextDeparture = iterator.next();
                             if (route.tracks(nextDeparture)) {
-                                route.getUpComingDepartures().add(nextDeparture);
+                                route.upComingDepartures.add(nextDeparture);
                                 index++;
                             }
                         }

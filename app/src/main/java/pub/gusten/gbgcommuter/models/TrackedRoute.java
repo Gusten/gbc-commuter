@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class TrackedRoute extends Route {
-    private final List<Departure> upComingDepartures;
+    public final List<Departure> upComingDepartures;
 
     public TrackedRoute(Route route) {
         super(route.from, route.fromStopId, route.to, route.toStopId, route.line);
@@ -15,10 +15,6 @@ public class TrackedRoute extends Route {
     public TrackedRoute(String from, String fromStopId, String to, String toStopId, String line) {
         super(from, fromStopId, to, toStopId, line);
         this.upComingDepartures = new ArrayList<>();
-    }
-
-    public List<Departure> getUpComingDepartures() {
-        return upComingDepartures;
     }
 
     public boolean tracks(Departure departure) {
