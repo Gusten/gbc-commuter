@@ -15,16 +15,12 @@ import pub.gusten.gbgcommuter.models.Departure;
 import static pub.gusten.gbgcommuter.helpers.ColorUtils.getColorFromHex;
 
 public class DepartureAdapter extends BaseAdapter {
-    private Context mContext;
     private LayoutInflater mInflater;
     private List<Departure> departures;
 
     public DepartureAdapter(Context mContext, List<Departure> departures) {
-        this.mContext = mContext;
         this.mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);;
         this.departures = departures;
-
-        // https://api.vasttrafik.se/bin/rest.exe/v2/trip?originId=9021014002210000&destId=9021014007220000&maxChanges=0&format=json
     }
 
     @Override

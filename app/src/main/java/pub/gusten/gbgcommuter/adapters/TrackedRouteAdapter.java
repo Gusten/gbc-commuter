@@ -15,14 +15,13 @@ import pub.gusten.gbgcommuter.models.TrackedRoute;
 
 import static pub.gusten.gbgcommuter.helpers.ColorUtils.getColorFromHex;
 import static pub.gusten.gbgcommuter.helpers.TextUtils.getNameWithoutArea;
+import static pub.gusten.gbgcommuter.helpers.TextUtils.splitCamelCase;
 
 public class TrackedRouteAdapter extends BaseAdapter {
-    private Context mContext;
     private LayoutInflater mInflater;
     private List<TrackedRoute> trackedRoutes;
 
     public TrackedRouteAdapter(Context mContext, List<TrackedRoute> trackedRoutes) {
-        this.mContext = mContext;
         this.mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         this.trackedRoutes = trackedRoutes;
     }
@@ -55,7 +54,9 @@ public class TrackedRouteAdapter extends BaseAdapter {
         lineNumber.setBackgroundColor(getColorFromHex(trackedRoute.fgColor.substring(1)));
 
         TextView name = rowView.findViewById(R.id.route_list_from);
-        name.setText(getNameWithoutArea(trackedRoute.from) + " <> " + getNameWithoutArea(trackedRoute.to));
+        String from = splitCamelCase(getNameWithoutArea(trackedRoute.from));
+        String to = splitCamelCase(getNameWithoutArea(trackedRoute.to));
+        name.setText(from + " <> " + to);
 
         return rowView;
     }

@@ -69,6 +69,8 @@ public class TrackerService extends Service {
         }
     };
 
+    private boolean isTracking;
+
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -91,9 +93,9 @@ public class TrackerService extends Service {
         startService(new Intent(this, ApiService.class));
         bindService(new Intent(this, ApiService.class), apiServiceConnection, BIND_AUTO_CREATE);
 
+        isTracking = true;
+
         trackedRoutes = new ArrayList<>();
-        //trackedRoutes.add(new TrackedRoute("Elisedal,Göteborg", "9021014002210000", "Valand,Göteborg", "9021014007220000", "4", "#ff2f22", "#ff2f22"));
-        //trackedRoutes.add(new TrackedRoute("Pilbågsgatan,Göteborg", "9021014005280000", "Vasaplatsen,Göteborg", "9021014007300000", "19", "#ff2f22", "#ff2f22"));
         trackedRouteIndex = 0;
 
         // Fetch tracked routes from shared prefs
@@ -167,6 +169,9 @@ public class TrackerService extends Service {
             if (route.equals(trackedRoute)) {
                 trackedRoutes.remove(trackedRoute);
                 updateLocalStorage();
+                if (trackedRoutes.isEmpty()) {
+                    notificationService.pause();
+                }
                 break;
             }
         }
@@ -199,6 +204,8 @@ public class TrackerService extends Service {
             trackedRoutes.size() <= trackedRouteIndex) {
             return;
         }
+
+        isTracking = true;
 
         TrackedRoute route = trackedRoutes.get(trackedRouteIndex);
         final long fromStopId = flipRoute ? route.toStopId : route.fromStopId;
@@ -236,6 +243,24 @@ public class TrackerService extends Service {
                         notificationService.showNotification(route, flipRoute, false, trackedRoutes.size() <= 1);
                     }
                 });
+    }
+
+    public void pauseTracking() {
+        notificationService.pause();
+        isTracking = false;
+    }
+
+    public void resumeTracking() {
+        if (trackedRoutes.isEmpty()) {
+            return;
+        }
+
+        trackRoute();
+        isTracking = true;
+    }
+
+    public boolean isTracking() {
+        return isTracking;
     }
 
     @Override

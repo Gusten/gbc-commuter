@@ -26,15 +26,16 @@ import pub.gusten.gbgcommuter.models.TrackedRoute;
 
 import static pub.gusten.gbgcommuter.helpers.ColorUtils.getColorFromHex;
 import static pub.gusten.gbgcommuter.helpers.TextUtils.getNameWithoutArea;
+import static pub.gusten.gbgcommuter.helpers.TextUtils.splitCamelCase;
 
 public class NotificationService extends Service {
     private NotificationManager notificationManager;
     private final int NOTIFICATION_ID = R.integer.notification_id;
     private String NOTIFICATION_CHANNEL_ID;
-    private String NOTIFICATION_CHANNEL_NAME;
 
     private PendingIntent nextPendingIntent;
     private PendingIntent flipPendingIntent;
+    private Notification currentNotification;
 
     @Nullable
     @Override
@@ -44,7 +45,7 @@ public class NotificationService extends Service {
 
     private final IBinder mBinder = new LocalBinder();
 
-    public class LocalBinder extends Binder {
+    class LocalBinder extends Binder {
         NotificationService getService() {
             return NotificationService.this;
         }
@@ -53,11 +54,11 @@ public class NotificationService extends Service {
     @Override
     public void onCreate() {
         NOTIFICATION_CHANNEL_ID = getString(R.string.notification_channel_id);
-        NOTIFICATION_CHANNEL_NAME = getString(R.string.notification_channel_name);
+        String channelName = getString(R.string.notification_channel_name);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-            NotificationChannel mChannel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, NOTIFICATION_CHANNEL_NAME, NotificationManager.IMPORTANCE_LOW);
+            NotificationChannel mChannel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_LOW);
             notificationManager.createNotificationChannel(mChannel);
         }
 
@@ -96,6 +97,8 @@ public class NotificationService extends Service {
 
         String from = getNameWithoutArea(flipRoute ? route.to : route.from);
         String to = getNameWithoutArea(flipRoute ? route.from : route.to);
+        from = splitCamelCase(from);
+        to = splitCamelCase(to);
         contentView.setTextViewText(R.id.notification_route, from + "  >>  " + to);
 
         if (dataIsFresh) {
@@ -141,18 +144,16 @@ public class NotificationService extends Service {
         contentView.setOnClickPendingIntent(R.id.notification_nextBtn, nextPendingIntent);
         contentView.setOnClickPendingIntent(R.id.notification_flipBtn, flipPendingIntent);
 
-        Notification notification;
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            notification = new Notification.Builder(this)
-                    .setChannelId(NOTIFICATION_CHANNEL_ID)
-                    .setSmallIcon(R.drawable.tramicon)
-                    .setContent(contentView)
-                    .setVisibility(Notification.VISIBILITY_PUBLIC)
-                    .build();
+            currentNotification = new Notification.Builder(this)
+                .setChannelId(NOTIFICATION_CHANNEL_ID)
+                .setSmallIcon(R.drawable.tramicon)
+                .setContent(contentView)
+                .setVisibility(Notification.VISIBILITY_PUBLIC)
+                .build();
         }
         else {
-            notification = new NotificationCompat.Builder(this)
+            currentNotification = new NotificationCompat.Builder(this)
                 .setChannel(NOTIFICATION_CHANNEL_ID)
                 .setSmallIcon(R.drawable.tramicon)
                 .setContent(contentView)
@@ -160,6 +161,16 @@ public class NotificationService extends Service {
                 .build();
         }
 
-        startForeground(NOTIFICATION_ID, notification);
+        startForeground(NOTIFICATION_ID, currentNotification);
+    }
+
+    public void pause() {
+        stopForeground(true);
+    }
+
+    public void resume() {
+        if (currentNotification != null) {
+            startForeground(NOTIFICATION_ID, currentNotification);
+        }
     }
 }

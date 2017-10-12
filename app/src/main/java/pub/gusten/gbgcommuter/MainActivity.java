@@ -40,7 +40,6 @@ import pub.gusten.gbgcommuter.services.TrackerService;
 
 public class MainActivity extends AppCompatActivity {
 
-
     private ApiService apiService;
     private boolean hasBoundApiService;
     private ServiceConnection apiConnection = new ServiceConnection() {
@@ -79,12 +78,21 @@ public class MainActivity extends AppCompatActivity {
     private Stop selectedFrom;
     private Stop selectedTo;
     private Departure selectedDeparture;
+
+    // TODO: Move this to a modal/dialog class
     private Dialog trackNewModal;
+    private AutoCompleteTextView fromSelector;
+    private AutoCompleteTextView toSelector;
+    private Spinner lineSpinner;
+    private List<Departure> filteredDepartures;
+    private DepartureAdapter departureAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+         filteredDepartures = new ArrayList<>();
 
         // Load locations from JSON file
         availableStops = loadAvailableStopsFromFile();
@@ -99,8 +107,7 @@ public class MainActivity extends AppCompatActivity {
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(view -> {
             trackNewModal.show();
-
-            ((AlertDialog)trackNewModal).getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+            resetTrackNewModal();
         });
 
         // Start and bind necessary services
@@ -112,8 +119,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    public void onDestroy() {
+        super.onDestroy();
+        unbindService(trackerConnection);
+        unbindService(apiConnection);
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
@@ -125,8 +138,13 @@ public class MainActivity extends AppCompatActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.toggle_tracking) {
+            if (hasBoundTracker && tracker.isTracking()) {
+                tracker.pauseTracking();
+            }
+            else if (hasBoundTracker && !tracker.isTracking()){
+                tracker.resumeTracking();
+            }
             return true;
         }
 
@@ -151,38 +169,22 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+        filteredDepartures.clear();
         apiService.fetchDepartures(selectedFrom.id, selectedTo.id, new ApiService.DeparturesRequest() {
             @Override
             public void onRequestCompleted(List<Departure> departures) {
-                List<Departure> filteredDepartures = new ArrayList<>();
                 // Filter out copies
                 for (Departure departure : departures) {
                     if(!filteredDepartures.contains(departure)) {
                         filteredDepartures.add(departure);
                     }
                 }
-
-                Spinner modalLineSpinner = modal.findViewById(R.id.modal_line_spinner);
-                DepartureAdapter adapter = new DepartureAdapter(mContext, filteredDepartures);
-                modalLineSpinner.setAdapter(adapter);
-                modalLineSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                    @Override
-                    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                        selectedDeparture = adapter.getItem(position);
-                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
-                    }
-
-                    @Override
-                    public void onNothingSelected(AdapterView<?> parent) {
-                        selectedDeparture = null;
-                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
-                    }
-                });
+                departureAdapter.notifyDataSetChanged();
             }
 
             @Override
             public void onRequestFailed() {
-
+                departureAdapter.notifyDataSetChanged();
             }
         });
     }
@@ -251,24 +253,49 @@ public class MainActivity extends AppCompatActivity {
 
         Dialog dialog = builder.create();
 
-        StopArrayAdapter adapter = new StopArrayAdapter(this, android.R.layout.simple_list_item_1, availableStops);
+        StopArrayAdapter stopAdapter = new StopArrayAdapter(this, android.R.layout.simple_list_item_1, availableStops);
 
-        AutoCompleteTextView fromSelector = modalView.findViewById(R.id.modal_from);
-        fromSelector.setAdapter(adapter);
+        fromSelector = modalView.findViewById(R.id.modal_from);
+        fromSelector.setAdapter(stopAdapter);
         fromSelector.setThreshold(1);
         fromSelector.setOnItemClickListener((parent, arg1, pos, id) -> {
-            selectedFrom = adapter.getItem(pos);
+            selectedFrom = stopAdapter.getItem(pos);
             listLines(modalView, (AlertDialog)dialog);
         });
 
-        AutoCompleteTextView toSelector = modalView.findViewById(R.id.modal_to);
-        toSelector.setAdapter(adapter);
+        toSelector = modalView.findViewById(R.id.modal_to);
+        toSelector.setAdapter(stopAdapter);
         toSelector.setThreshold(1);
         toSelector.setOnItemClickListener((parent, arg1, pos, id) -> {
-            selectedTo = adapter.getItem(pos);
+            selectedTo = stopAdapter.getItem(pos);
             listLines(modalView, (AlertDialog)dialog);
+        });
+
+        departureAdapter = new DepartureAdapter(mContext, filteredDepartures);
+        lineSpinner = modalView.findViewById(R.id.modal_line_spinner);
+        lineSpinner.setAdapter(departureAdapter);
+        lineSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                selectedDeparture = departureAdapter.getItem(position);
+                ((AlertDialog)dialog).getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                selectedDeparture = null;
+                ((AlertDialog)dialog).getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+            }
         });
 
         return dialog;
+    }
+
+    public void resetTrackNewModal() {
+        ((AlertDialog)trackNewModal).getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+        fromSelector.setText("");
+        toSelector.setText("");
+        filteredDepartures.clear();
+        departureAdapter.notifyDataSetChanged();
     }
 }

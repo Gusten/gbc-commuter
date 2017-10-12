@@ -2,6 +2,7 @@ package pub.gusten.gbgcommuter.adapters;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import pub.gusten.gbgcommuter.models.Stop;
+
+import static pub.gusten.gbgcommuter.helpers.TextUtils.splitCamelCase;
 
 public class StopArrayAdapter extends ArrayAdapter<Stop> {
     private LayoutInflater mInflater;
@@ -41,17 +44,20 @@ public class StopArrayAdapter extends ArrayAdapter<Stop> {
         return position;
     }
 
+    @NonNull
     @SuppressLint("ViewHolder")
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
          View rowView = mInflater.inflate(android.R.layout.simple_list_item_1, parent, false);
 
-        TextView name = rowView.findViewById(android.R.id.text1);
-        name.setText(filteredStops.get(position).name.replace(",", ", "));
+        TextView nameView = rowView.findViewById(android.R.id.text1);
+        String name = splitCamelCase(filteredStops.get(position).name).replace(" , ", ", ");
+        nameView.setText(name);
 
         return rowView;
     }
 
+    @NonNull
     @Override
     public Filter getFilter() {
         return nameFilter;
@@ -60,7 +66,8 @@ public class StopArrayAdapter extends ArrayAdapter<Stop> {
     private final Filter nameFilter = new Filter() {
         @Override
         public CharSequence convertResultToString(Object result) {
-            return ((Stop)result).name.replace(",", ", ");
+            String name = splitCamelCase(((Stop)result).name);
+            return name.replace(" , ", ", ");
         }
 
         @Override
