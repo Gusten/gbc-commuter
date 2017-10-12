@@ -95,6 +95,6 @@
             android:layout_alignParentRight="true"
             android:layout_margin="2dp"
             android:background="@color/colorAccent"
-            android:src="@drawable/ic_train_24dp"/>
+            android:src="@drawable/ic_tram_24dp"/>
     </RelativeLayout>
 </LinearLayout>

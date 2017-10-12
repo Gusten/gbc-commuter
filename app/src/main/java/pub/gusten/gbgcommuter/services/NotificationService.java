@@ -145,7 +145,7 @@ public class NotificationService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             notification = new Notification.Builder(this)
                     .setChannelId(NOTIFICATION_CHANNEL_ID)
-                    .setSmallIcon(R.drawable.ic_train_24dp)
+                    .setSmallIcon(R.drawable.ic_tram_24dp)
                     .setContent(contentView)
                     .setVisibility(Notification.VISIBILITY_PUBLIC)
                     .build();
@@ -153,7 +153,7 @@ public class NotificationService extends Service {
         else {
             notification = new NotificationCompat.Builder(this)
                 .setChannel(NOTIFICATION_CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_train_24dp)
+                .setSmallIcon(R.drawable.ic_tram_24dp)
                 .setContent(contentView)
                 .setVisibility(Notification.VISIBILITY_PUBLIC)
                 .build();
