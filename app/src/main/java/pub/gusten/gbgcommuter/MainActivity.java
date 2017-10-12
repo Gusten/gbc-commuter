@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import pub.gusten.gbgcommuter.models.Departure;
 import pub.gusten.gbgcommuter.models.Route;
 import pub.gusten.gbgcommuter.models.Stop;
 import pub.gusten.gbgcommuter.services.ApiService;
@@ -67,6 +68,8 @@ public class MainActivity extends AppCompatActivity {
     private boolean routeSelected;
     private Route selectedRoute;
     private List<Stop> availableStops;
+    private Stop selectedFrom;
+    private Stop selectedTo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,14 +96,16 @@ public class MainActivity extends AppCompatActivity {
         fromSelector.setAdapter(adapter);
         fromSelector.setThreshold(1);
         fromSelector.setOnItemClickListener((parent, arg1, pos, id) -> {
-            Toast.makeText(this,adapter.getItem(pos).id + "", Toast.LENGTH_LONG).show();
+            selectedFrom = adapter.getItem(pos);
+            listLines();
         });
 
         AutoCompleteTextView toSelector = (AutoCompleteTextView)findViewById(R.id.main_to_location);
         toSelector.setAdapter(adapter);
         toSelector.setThreshold(1);
         toSelector.setOnItemClickListener((parent, arg1, pos, id) -> {
-            Toast.makeText(this,adapter.getItem(pos).id + "", Toast.LENGTH_LONG).show();
+            selectedTo = adapter.getItem(pos);
+            listLines();
         });
 
         // Start necessary services
@@ -131,6 +136,24 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void listLines() {
+        if (!hasBoundApiService || selectedTo == null || selectedFrom == null) {
+            return;
+        }
+
+        apiService.fetchDepartures(Long.toString(selectedFrom.id), Long.toString(selectedTo.id), new ApiService.DeparturesRequest() {
+            @Override
+            public void onRequestCompleted(List<Departure> departures) {
+                List<Departure> tmp = departures;
+            }
+
+            @Override
+            public void onRequestFailed() {
+
+            }
+        });
     }
 
     private void loadLocations() {
