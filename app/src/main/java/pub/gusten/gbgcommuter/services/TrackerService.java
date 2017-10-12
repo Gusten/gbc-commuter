@@ -14,15 +14,12 @@ import android.support.annotation.Nullable;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.threeten.bp.Instant;
 import org.threeten.bp.LocalDateTime;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import pub.gusten.gbgcommuter.models.Route;
 import pub.gusten.gbgcommuter.receivers.ScreenActionReceiver;
 import pub.gusten.gbgcommuter.models.Departure;
 import pub.gusten.gbgcommuter.models.NotificationAction;
@@ -95,6 +92,8 @@ public class TrackerService extends Service {
         bindService(new Intent(this, ApiService.class), apiServiceConnection, BIND_AUTO_CREATE);
 
         trackedRoutes = new ArrayList<>();
+        //trackedRoutes.add(new TrackedRoute("Elisedal,Göteborg", "9021014002210000", "Valand,Göteborg", "9021014007220000", "4", "#ff2f22", "#ff2f22"));
+        //trackedRoutes.add(new TrackedRoute("Pilbågsgatan,Göteborg", "9021014005280000", "Vasaplatsen,Göteborg", "9021014007300000", "19", "#ff2f22", "#ff2f22"));
         trackedRouteIndex = 0;
 
         // Fetch tracked routes from shared prefs
@@ -109,7 +108,9 @@ public class TrackerService extends Service {
                     tmpObj.getString("fromStopId"),
                     tmpObj.getString("to"),
                     tmpObj.getString("toStopId"),
-                    tmpObj.getString("line")
+                    tmpObj.getString("line"),
+                    tmpObj.getString("bgColor"),
+                    tmpObj.getString("fgColor")
                 ));
             }
         } catch (JSONException e) {
@@ -153,23 +154,26 @@ public class TrackerService extends Service {
         return START_STICKY;
     }
 
-    public void startTracking(Route route) {
-        TrackedRoute tmp = new TrackedRoute(route);
-        if (!trackedRoutes.contains(tmp)) {
-            trackedRoutes.add(tmp);
+    public void startTracking(TrackedRoute newRoute) {
+        if (!trackedRoutes.contains(newRoute)) {
+            trackedRoutes.add(newRoute);
             updateLocalStorage();
         }
         trackRoute();
     }
 
-    public void stopTracking(Route route) {
-        for (Route trackedRoute : trackedRoutes) {
+    public void stopTracking(TrackedRoute route) {
+        for (TrackedRoute trackedRoute : trackedRoutes) {
             if (route.equals(trackedRoute)) {
                 trackedRoutes.remove(trackedRoute);
                 updateLocalStorage();
                 break;
             }
         }
+    }
+
+    public List<TrackedRoute> getTrackedRoutes() {
+        return trackedRoutes;
     }
 
     private void updateLocalStorage() {

@@ -1,5 +1,6 @@
 package pub.gusten.gbgcommuter;
 
+import android.app.Dialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -7,12 +8,17 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.AutoCompleteTextView;
 import android.widget.ListView;
+import android.widget.Spinner;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -25,9 +31,10 @@ import java.util.List;
 
 import pub.gusten.gbgcommuter.adapters.DepartureAdapter;
 import pub.gusten.gbgcommuter.adapters.StopArrayAdapter;
+import pub.gusten.gbgcommuter.adapters.TrackedRouteAdapter;
 import pub.gusten.gbgcommuter.models.Departure;
-import pub.gusten.gbgcommuter.models.Route;
 import pub.gusten.gbgcommuter.models.Stop;
+import pub.gusten.gbgcommuter.models.TrackedRoute;
 import pub.gusten.gbgcommuter.services.ApiService;
 import pub.gusten.gbgcommuter.services.TrackerService;
 
@@ -63,9 +70,11 @@ public class MainActivity extends AppCompatActivity {
             hasBoundTracker = true;
             TrackerService.LocalBinder mLocalBinder = (TrackerService.LocalBinder)service;
             tracker = mLocalBinder.getService();
+            listTrackedRoutes();
         }
     };
 
+    private final Context mContext = this;
     private List<Stop> availableStops;
     private Stop selectedFrom;
     private Stop selectedTo;
@@ -82,31 +91,52 @@ public class MainActivity extends AppCompatActivity {
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(view -> {
-            if (hasBoundTracker && selectedDeparture != null && selectedFrom != null && selectedTo != null) {
-                tracker.startTracking(new Route(selectedFrom.name, Long.toString(selectedFrom.id), selectedTo.name, Long.toString(selectedTo.id), selectedDeparture.line));
-            }
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            LayoutInflater layoutInflater = LayoutInflater.from(MainActivity.this);
+            View modalView = layoutInflater.inflate(R.layout.modal_track_route, null);
+
+            builder.setView(modalView)
+                    .setPositiveButton(R.string.modal_save, (dialog, id) -> {
+                        if (hasBoundTracker && selectedDeparture != null && selectedFrom != null && selectedTo != null) {
+                            tracker.startTracking(new TrackedRoute(selectedFrom.name, Long.toString(selectedFrom.id), selectedTo.name, Long.toString(selectedTo.id), selectedDeparture.line, selectedDeparture.bgColor, selectedDeparture.fgColor));
+                            listTrackedRoutes();
+                        }
+                        selectedTo = null;
+                        selectedFrom = null;
+                        selectedDeparture = null;
+                    })
+                    .setNegativeButton(R.string.modal_cancel, (dialog, id) -> {
+                        selectedTo = null;
+                        selectedFrom = null;
+                        selectedDeparture = null;
+                        dialog.cancel();
+                    });
+
+            Dialog dialog = builder.create();
+
+            StopArrayAdapter adapter = new StopArrayAdapter(this, android.R.layout.simple_list_item_1, availableStops);
+
+            AutoCompleteTextView fromSelector = modalView.findViewById(R.id.modal_from);
+            fromSelector.setAdapter(adapter);
+            fromSelector.setThreshold(1);
+            fromSelector.setOnItemClickListener((parent, arg1, pos, id) -> {
+                selectedFrom = adapter.getItem(pos);
+                listLines(modalView);
+            });
+
+            AutoCompleteTextView toSelector = modalView.findViewById(R.id.modal_to);
+            toSelector.setAdapter(adapter);
+            toSelector.setThreshold(1);
+            toSelector.setOnItemClickListener((parent, arg1, pos, id) -> {
+                selectedTo = adapter.getItem(pos);
+                listLines(modalView);
+            });
+
+            dialog.show();
         });
 
         // Load locations from JSON file
         loadLocations();
-
-        StopArrayAdapter adapter = new StopArrayAdapter(this, android.R.layout.simple_list_item_1, availableStops);
-
-        AutoCompleteTextView fromSelector = (AutoCompleteTextView)findViewById(R.id.main_from_location);
-        fromSelector.setAdapter(adapter);
-        fromSelector.setThreshold(1);
-        fromSelector.setOnItemClickListener((parent, arg1, pos, id) -> {
-            selectedFrom = adapter.getItem(pos);
-            listLines();
-        });
-
-        AutoCompleteTextView toSelector = (AutoCompleteTextView)findViewById(R.id.main_to_location);
-        toSelector.setAdapter(adapter);
-        toSelector.setThreshold(1);
-        toSelector.setOnItemClickListener((parent, arg1, pos, id) -> {
-            selectedTo = adapter.getItem(pos);
-            listLines();
-        });
 
         // Start necessary services
         startService(new Intent(this, TrackerService.class));
@@ -138,20 +168,48 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private void listLines() {
+    private void listTrackedRoutes() {
+        if (!hasBoundTracker) {
+            return;
+        }
+        ListView listView = (ListView) findViewById(R.id.main_tracked_routes);
+        TrackedRouteAdapter adapter = new TrackedRouteAdapter(mContext, tracker.getTrackedRoutes());
+        listView.setAdapter(adapter);
+        listView.setOnItemClickListener((parent, view, position, id) -> {
+            tracker.stopTracking(adapter.getItem(position));
+            listTrackedRoutes();
+        });
+    }
+
+    private void listLines(View modal) {
         if (!hasBoundApiService || selectedTo == null || selectedFrom == null) {
             return;
         }
 
-        final Context contextRef = this;
         apiService.fetchDepartures(Long.toString(selectedFrom.id), Long.toString(selectedTo.id), new ApiService.DeparturesRequest() {
             @Override
             public void onRequestCompleted(List<Departure> departures) {
-                ListView listView = (ListView) findViewById(R.id.available_routes_list);
-                DepartureAdapter adapter = new DepartureAdapter(contextRef, departures);
-                listView.setAdapter(adapter);
-                listView.setOnItemClickListener((parent, view, position, id) -> {
-                    selectedDeparture = adapter.getItem(position);
+                List<Departure> filteredDepartures = new ArrayList<>();
+                // Filter out copies
+                for (Departure departure : departures) {
+                    if(!filteredDepartures.contains(departure)) {
+                        filteredDepartures.add(departure);
+                    }
+                }
+
+                Spinner modalLineSpinner = modal.findViewById(R.id.modal_line_spinner);
+                DepartureAdapter adapter = new DepartureAdapter(mContext, filteredDepartures);
+                modalLineSpinner.setAdapter(adapter);
+                modalLineSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                        selectedDeparture = adapter.getItem(position);
+                    }
+
+                    @Override
+                    public void onNothingSelected(AdapterView<?> parent) {
+                        selectedDeparture = null;
+                    }
                 });
             }
 

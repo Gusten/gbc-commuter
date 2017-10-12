@@ -4,6 +4,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.threeten.bp.LocalDateTime;
 
+import java.util.Objects;
+
 import pub.gusten.gbgcommuter.helpers.DateUtils;
 
 public class Departure {
@@ -27,7 +29,7 @@ public class Departure {
 
     public Departure(JSONObject jsonObject) throws JSONException {
         name =              jsonObject.getString("name");
-        line =             jsonObject.getString("sname");
+        line =              jsonObject.getString("sname");
         type =              jsonObject.getString("type");
         stopid =            jsonObject.getString("stopid");
         stop =              jsonObject.getString("stop");
@@ -52,6 +54,15 @@ public class Departure {
         }
 
         timeInstant = LocalDateTime.parse(rtDate + " " + rtTime, DateUtils.fullDateFormatter);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Departure otherDeparture = (Departure) o;
+        return Objects.equals(name, otherDeparture.name) &&
+                Objects.equals(line, otherDeparture.line);
     }
 
     @Override

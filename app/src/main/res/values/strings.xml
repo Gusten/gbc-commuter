@@ -4,4 +4,8 @@
     <string name="notification_channel_id">gbgc_notification_1</string>
     <string name="notification_channel_name">gbgc_notifications</string>
     <integer name="notification_id">1</integer>
+    <string name="modal_from_hint">From</string>
+    <string name="modal_to_hint">To</string>
+    <string name="modal_cancel">Cancel</string>
+    <string name="modal_save">Save</string>
 </resources>

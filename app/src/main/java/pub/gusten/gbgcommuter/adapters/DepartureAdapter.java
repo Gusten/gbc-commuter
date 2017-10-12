@@ -44,17 +44,14 @@ public class DepartureAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        View rowView = mInflater.inflate(R.layout.route_list_item, parent, false);
+        View rowView = mInflater.inflate(R.layout.modal_line_icon, parent, false);
 
         Departure departure = getItem(position);
 
-        TextView lineNumber = rowView.findViewById(R.id.route_list_line);
+        TextView lineNumber = rowView.findViewById(R.id.modal_line_number);
         lineNumber.setText(departure.line);
         lineNumber.setTextColor(getColorFromHex(departure.bgColor.substring(1)));
         lineNumber.setBackgroundColor(getColorFromHex(departure.fgColor.substring(1)));
-
-        TextView name = rowView.findViewById(R.id.route_list_name);
-        name.setText("What to show here I wonder");
 
         return rowView;
     }

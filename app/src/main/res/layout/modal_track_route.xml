@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:minWidth="200dp">
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:scaleType="center"
+        android:background="@color/colorPrimary"
+        android:contentDescription="@string/app_name"
+        android:text="Track new route"
+        android:textColor="@android:color/white"
+        android:textSize="23dp"
+        android:gravity="center"/>
+    <AutoCompleteTextView
+        android:id="@+id/modal_from"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginLeft="4dp"
+        android:layout_marginRight="4dp"
+        android:layout_marginBottom="4dp"
+        android:hint="@string/modal_from_hint" />
+    <AutoCompleteTextView
+        android:id="@+id/modal_to"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginLeft="4dp"
+        android:layout_marginRight="4dp"
+        android:layout_marginBottom="16dp"
+        app:layout_constraintTop_toBottomOf="@+id/main_from_location"
+        android:hint="@string/modal_to_hint" />
+    <Spinner
+        android:id="@+id/modal_line_spinner"
+        android:layout_width="80dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center">
+    </Spinner>
+</LinearLayout>

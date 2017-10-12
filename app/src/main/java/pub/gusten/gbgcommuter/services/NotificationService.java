@@ -25,6 +25,7 @@ import pub.gusten.gbgcommuter.models.NotificationAction;
 import pub.gusten.gbgcommuter.models.TrackedRoute;
 
 import static pub.gusten.gbgcommuter.helpers.ColorUtils.getColorFromHex;
+import static pub.gusten.gbgcommuter.helpers.TextUtils.getNameWithoutArea;
 
 public class NotificationService extends Service {
     private NotificationManager notificationManager;
@@ -159,9 +160,5 @@ public class NotificationService extends Service {
         }
 
         startForeground(NOTIFICATION_ID, notification);
-    }
-
-    private String getNameWithoutArea(String fullName) {
-        return fullName.split(",")[0];
     }
 }

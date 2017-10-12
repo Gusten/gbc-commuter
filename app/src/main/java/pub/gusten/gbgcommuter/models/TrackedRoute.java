@@ -1,20 +1,44 @@
 package pub.gusten.gbgcommuter.models;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class TrackedRoute extends Route {
+public class TrackedRoute {
+    public final String from;
+    public final String fromStopId;
+    public final String to;
+    public final String toStopId;
+    public final String line;
+    public final String bgColor;
+    public final String fgColor;
     public final List<Departure> upComingDepartures;
 
-    public TrackedRoute(Route route) {
-        super(route.from, route.fromStopId, route.to, route.toStopId, route.line);
+    public TrackedRoute(String from, String fromStopId, String to, String toStopId, String line, String bgColor, String fgColor) {
+        this.from = from;
+        this.fromStopId = fromStopId;
+        this.to = to;
+        this.toStopId = toStopId;
+        this.line = line;
+        this.bgColor = bgColor;
+        this.fgColor = fgColor;
         this.upComingDepartures = new ArrayList<>();
     }
 
-    public TrackedRoute(String from, String fromStopId, String to, String toStopId, String line) {
-        super(from, fromStopId, to, toStopId, line);
-        this.upComingDepartures = new ArrayList<>();
+
+    public JSONObject toJsonObject() throws JSONException {
+        JSONObject jsonObj = new JSONObject();
+        jsonObj.put("from", from);
+        jsonObj.put("fromStopId", fromStopId);
+        jsonObj.put("to", to);
+        jsonObj.put("toStopId", toStopId);
+        jsonObj.put("line", line);
+        jsonObj.put("bgColor", bgColor);
+        jsonObj.put("fgColor", fgColor);
+        return jsonObj;
     }
 
     public boolean tracks(Departure departure) {
@@ -39,6 +63,10 @@ public class TrackedRoute extends Route {
                     ", to = " + to +
                     ", toStopId = " + toStopId +
                     ", line = " + line +
+                    ", toStopId = " + toStopId +
+                    ", line = " + line +
+                    ", bgColor = " + bgColor +
+                    ", fgColor = " + fgColor +
                     ", nr of upcoming departures = " + upComingDepartures.size() +
                 "}";
     }
