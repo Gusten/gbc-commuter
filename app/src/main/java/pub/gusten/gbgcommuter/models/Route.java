@@ -1,7 +1,5 @@
 package pub.gusten.gbgcommuter.models;
 
-import android.util.Log;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
