@@ -91,7 +91,7 @@ public class NotificationService extends Service {
         notificationManager.cancel(NOTIFICATION_ID);
     }
 
-    public void showNotification(TrackedRoute route, boolean flipRoute, boolean dataIsFresh) {
+    public void showNotification(TrackedRoute route, boolean flipRoute, boolean dataIsFresh, boolean singleRoute) {
         RemoteViews contentView = new RemoteViews(getPackageName(), R.layout.custom_notification);
 
         String from = getNameWithoutArea(flipRoute ? route.to : route.from);
@@ -137,6 +137,7 @@ public class NotificationService extends Service {
         }
 
         // Set button actions/callbacks
+        contentView.setViewVisibility(R.id.notification_nextBtn, (singleRoute) ? View.GONE : View.VISIBLE);
         contentView.setOnClickPendingIntent(R.id.notification_nextBtn, nextPendingIntent);
         contentView.setOnClickPendingIntent(R.id.notification_flipBtn, flipPendingIntent);
 
@@ -145,7 +146,7 @@ public class NotificationService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             notification = new Notification.Builder(this)
                     .setChannelId(NOTIFICATION_CHANNEL_ID)
-                    .setSmallIcon(R.drawable.ic_tram_24dp)
+                    .setSmallIcon(R.drawable.tramicon)
                     .setContent(contentView)
                     .setVisibility(Notification.VISIBILITY_PUBLIC)
                     .build();
@@ -153,7 +154,7 @@ public class NotificationService extends Service {
         else {
             notification = new NotificationCompat.Builder(this)
                 .setChannel(NOTIFICATION_CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_tram_24dp)
+                .setSmallIcon(R.drawable.tramicon)
                 .setContent(contentView)
                 .setVisibility(Notification.VISIBILITY_PUBLIC)
                 .build();

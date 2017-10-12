@@ -121,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
             fromSelector.setThreshold(1);
             fromSelector.setOnItemClickListener((parent, arg1, pos, id) -> {
                 selectedFrom = adapter.getItem(pos);
-                listLines(modalView);
+                listLines(modalView, (AlertDialog)dialog);
             });
 
             AutoCompleteTextView toSelector = modalView.findViewById(R.id.modal_to);
@@ -129,10 +129,12 @@ public class MainActivity extends AppCompatActivity {
             toSelector.setThreshold(1);
             toSelector.setOnItemClickListener((parent, arg1, pos, id) -> {
                 selectedTo = adapter.getItem(pos);
-                listLines(modalView);
+                listLines(modalView, (AlertDialog)dialog);
             });
 
             dialog.show();
+
+            ((AlertDialog)dialog).getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
         });
 
         // Load locations from JSON file
@@ -181,7 +183,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void listLines(View modal) {
+    private void listLines(View modal, AlertDialog dialog) {
         if (!hasBoundApiService || selectedTo == null || selectedFrom == null) {
             return;
         }
@@ -204,11 +206,13 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                         selectedDeparture = adapter.getItem(position);
+                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
                     }
 
                     @Override
                     public void onNothingSelected(AdapterView<?> parent) {
                         selectedDeparture = null;
+                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
                     }
                 });
             }

@@ -228,12 +228,12 @@ public class TrackerService extends Service {
                             }
                         }
 
-                        notificationService.showNotification(route, flipRoute, true);
+                        notificationService.showNotification(route, flipRoute, true, trackedRoutes.size() <= 1);
                     }
 
                     @Override
                     public void onRequestFailed() {
-                        notificationService.showNotification(route, flipRoute, false);
+                        notificationService.showNotification(route, flipRoute, false, trackedRoutes.size() <= 1);
                     }
                 });
     }
