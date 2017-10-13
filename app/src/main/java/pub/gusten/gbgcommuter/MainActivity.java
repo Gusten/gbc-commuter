@@ -155,6 +155,7 @@ public class MainActivity extends AppCompatActivity {
         if (!hasBoundTracker) {
             return;
         }
+
         ListView listView = (ListView) findViewById(R.id.main_tracked_routes);
         TrackedRouteAdapter adapter = new TrackedRouteAdapter(mContext, tracker.getTrackedRoutes());
         listView.setAdapter(adapter);
@@ -162,6 +163,12 @@ public class MainActivity extends AppCompatActivity {
             tracker.stopTracking(adapter.getItem(position));
             listTrackedRoutes();
         });
+        if (tracker.getTrackedRoutes().isEmpty()) {
+            showTutorial();
+        }
+        else {
+            hideTutorial();
+        }
     }
 
     private void listLines(View modal, AlertDialog dialog) {
@@ -291,11 +298,21 @@ public class MainActivity extends AppCompatActivity {
         return dialog;
     }
 
-    public void resetTrackNewModal() {
+    private void resetTrackNewModal() {
         ((AlertDialog)trackNewModal).getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
         fromSelector.setText("");
         toSelector.setText("");
         filteredDepartures.clear();
         departureAdapter.notifyDataSetChanged();
+    }
+
+    private void hideTutorial() {
+        findViewById(R.id.main_tutorial_image).setVisibility(View.INVISIBLE);
+        findViewById(R.id.main_tutorial_text).setVisibility(View.INVISIBLE);
+    }
+
+    private void showTutorial() {
+        findViewById(R.id.main_tutorial_image).setVisibility(View.VISIBLE);
+        findViewById(R.id.main_tutorial_text).setVisibility(View.VISIBLE);
     }
 }
