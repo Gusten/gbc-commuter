@@ -10,4 +10,21 @@
     <string name="modal_save">Save</string>
     <string name="main_toolbar">Tracked departures</string>
     <string name="main_tutorial">Press the plus icon to start tracking your favorite departures.</string>
+
+    <!-- Weekdays -->
+    <string name="monday_short">M</string>
+    <string name="tuesday_short">T</string>
+    <string name="wednesday_short">W</string>
+    <string name="thursday_short">T</string>
+    <string name="friday_short">F</string>
+    <string name="saturday_short">S</string>
+    <string name="sunday_short">S</string>
+
+    <string name="monday_long">Monday</string>
+    <string name="tuesday_long">Tuesday</string>
+    <string name="wednesday_long">Wednesday</string>
+    <string name="thursday_long">Thursday</string>
+    <string name="friday_long">Friday</string>
+    <string name="saturday_long">Saturday</string>
+    <string name="sunday_long">Sunday</string>
 </resources>

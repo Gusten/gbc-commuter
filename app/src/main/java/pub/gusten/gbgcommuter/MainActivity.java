@@ -15,15 +15,15 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.AutoCompleteTextView;
 import android.widget.ListView;
-import android.widget.Spinner;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -33,14 +33,17 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import pub.gusten.gbgcommuter.adapters.DepartureAdapter;
+import pub.gusten.gbgcommuter.adapters.SelectableLineAdapter;
 import pub.gusten.gbgcommuter.adapters.StopArrayAdapter;
 import pub.gusten.gbgcommuter.adapters.TrackedRouteAdapter;
+import pub.gusten.gbgcommuter.models.SelectableLine;
 import pub.gusten.gbgcommuter.models.departures.Departure;
 import pub.gusten.gbgcommuter.models.Stop;
 import pub.gusten.gbgcommuter.models.TrackedRoute;
 import pub.gusten.gbgcommuter.services.ApiService;
 import pub.gusten.gbgcommuter.services.TrackerService;
+
+import static pub.gusten.gbgcommuter.models.SelectableLine.selectableLineFromDeparture;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -107,9 +110,9 @@ public class MainActivity extends AppCompatActivity {
     private Dialog trackNewModal;
     private AutoCompleteTextView fromSelector;
     private AutoCompleteTextView toSelector;
-    private Spinner lineSpinner;
-    private List<Departure> filteredDepartures;
-    private DepartureAdapter departureAdapter;
+    private RecyclerView linesListView;
+    private List<SelectableLine> availableLines;
+    private SelectableLineAdapter selectableLineAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -117,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         setTitle(R.string.main_toolbar);
 
-         filteredDepartures = new ArrayList<>();
+        availableLines = new ArrayList<>();
 
         // Load locations from JSON file
         availableStops = loadAvailableStopsFromFile();
@@ -211,22 +214,23 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        filteredDepartures.clear();
+        availableLines.clear();
         apiService.fetchDepartures(selectedFrom.id, selectedTo.id, new ApiService.DeparturesRequest() {
             @Override
             public void onRequestCompleted(List<Departure> departures) {
                 // Filter out copies
                 for (Departure departure : departures) {
-                    if(!filteredDepartures.contains(departure)) {
-                        filteredDepartures.add(departure);
+                    SelectableLine tmpLine = selectableLineFromDeparture(departure);
+                    if(!availableLines.contains(tmpLine)) {
+                        availableLines.add(tmpLine);
                     }
                 }
-                departureAdapter.notifyDataSetChanged();
+                selectableLineAdapter.notifyDataSetChanged();
             }
 
             @Override
             public void onRequestFailed() {
-                departureAdapter.notifyDataSetChanged();
+                selectableLineAdapter.notifyDataSetChanged();
             }
         });
     }
@@ -300,22 +304,12 @@ public class MainActivity extends AppCompatActivity {
             listLines();
         });
 
-        departureAdapter = new DepartureAdapter(mContext, filteredDepartures);
-        lineSpinner = modalView.findViewById(R.id.modal_line_spinner);
-        lineSpinner.setAdapter(departureAdapter);
-        lineSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                selectedDeparture = departureAdapter.getItem(position);
-                ((AlertDialog)dialog).getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                selectedDeparture = null;
-                ((AlertDialog)dialog).getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
-            }
+        selectableLineAdapter = new SelectableLineAdapter(mContext, availableLines, selectableLine -> {
+            ((AlertDialog)dialog).getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
+            Toast.makeText(mContext, "Item Clicked", Toast.LENGTH_LONG).show();
         });
+        linesListView = modalView.findViewById(R.id.modal_lines_list);
+        linesListView.setAdapter(selectableLineAdapter);
 
         return dialog;
     }
@@ -324,8 +318,8 @@ public class MainActivity extends AppCompatActivity {
         ((AlertDialog)trackNewModal).getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
         fromSelector.setText("");
         toSelector.setText("");
-        filteredDepartures.clear();
-        departureAdapter.notifyDataSetChanged();
+        availableLines.clear();
+        selectableLineAdapter.notifyDataSetChanged();
     }
 
     private void hideTutorial() {

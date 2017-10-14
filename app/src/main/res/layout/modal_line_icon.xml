@@ -5,6 +5,19 @@
     android:layout_width="50dp"
     android:layout_height="50dp">
 
+    <ImageView
+        android:id="@+id/modal_line_selected"
+        android:layout_width="45dp"
+        android:layout_height="45dp"
+        android:background="@color/colorAccent"
+        android:gravity="center"
+        android:text=""
+        android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+        android:textColor="@android:color/white"
+        app:layout_constraintBottom_toBottomOf="@id/modal_line_number"
+        app:layout_constraintEnd_toEndOf="@id/modal_line_number"
+        app:layout_constraintStart_toStartOf="@id/modal_line_number"
+        app:layout_constraintTop_toTopOf="@id/modal_line_number" />
     <TextView
         android:id="@+id/modal_line_number"
         android:layout_width="40dp"

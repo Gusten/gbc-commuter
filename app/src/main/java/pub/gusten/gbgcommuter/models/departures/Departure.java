@@ -10,6 +10,7 @@ import pub.gusten.gbgcommuter.helpers.DateUtils;
 
 public class Departure {
     private String name;
+    @SerializedName("sname")
     private String line;
     private String type;
     private String stop;

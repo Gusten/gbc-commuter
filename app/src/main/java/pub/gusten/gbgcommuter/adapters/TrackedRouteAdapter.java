@@ -15,7 +15,6 @@ import pub.gusten.gbgcommuter.R;
 import pub.gusten.gbgcommuter.models.TrackedRoute;
 import pub.gusten.gbgcommuter.services.TrackerService;
 
-import static pub.gusten.gbgcommuter.helpers.ColorUtils.getColorFromHex;
 import static pub.gusten.gbgcommuter.helpers.TextUtils.getNameWithoutArea;
 import static pub.gusten.gbgcommuter.helpers.TextUtils.splitCamelCase;
 
