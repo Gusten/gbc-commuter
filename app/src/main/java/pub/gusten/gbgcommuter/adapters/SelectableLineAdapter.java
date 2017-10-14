@@ -45,9 +45,9 @@ public class SelectableLineAdapter extends RecyclerView.Adapter {
         }
 
         public void bind(final SelectableLine selectableLine, final OnDepartureOnClickListener listener) {
-            lineTextView.setText(selectableLine.line);
-            lineTextView.setTextColor(getColorFromHex(selectableLine.bgColor.substring(1)));
-            lineTextView.setBackgroundColor(getColorFromHex(selectableLine.fgColor.substring(1)));
+            lineTextView.setText(selectableLine.line.name);
+            lineTextView.setTextColor(getColorFromHex(selectableLine.line.bgColor.substring(1)));
+            lineTextView.setBackgroundColor(getColorFromHex(selectableLine.line.fgColor.substring(1)));
             lineTextView.setOnClickListener(v -> {
                 selectableLine.isSelected = !selectableLine.isSelected;
                 if(selectableLine.isSelected) {
@@ -58,6 +58,8 @@ public class SelectableLineAdapter extends RecyclerView.Adapter {
                 }
                 listener.onDepartureClick(selectableLine);
             });
+            // Default is selected
+            selectedImageView.setVisibility(View.VISIBLE);
         }
     }
 

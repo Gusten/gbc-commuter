@@ -4,11 +4,12 @@ import java.util.Objects;
 
 import pub.gusten.gbgcommuter.models.departures.Departure;
 
-public class SelectableLine extends Line {
+public class SelectableLine {
     public boolean isSelected;
+    public final Line line;
 
     public SelectableLine(String line, String bgColor, String fgColor){
-        super(line, bgColor, fgColor);
+        this.line = new Line(line, bgColor, fgColor);
         isSelected = true;
     }
 

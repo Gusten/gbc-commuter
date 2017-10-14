@@ -253,13 +253,9 @@ public class TrackerService extends Service {
                     public void onRequestCompleted(List<Departure> departures) {
                         route.upComingDepartures.clear();
 
-                        int index = 0;
-                        Iterator<Departure> iterator = departures.iterator();
-                        while(index < 2 && iterator.hasNext()) {
-                            Departure nextDeparture = iterator.next();
+                        for (Departure nextDeparture: departures) {
                             if (route.tracks(nextDeparture)) {
                                 route.upComingDepartures.add(nextDeparture);
-                                index++;
                             }
                         }
 

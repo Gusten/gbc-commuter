@@ -36,7 +36,12 @@ public class TrackedRoute {
     }
 
     public boolean tracks(Departure departure) {
-        return lines.contains(departure.getLine());
+        for (Line line : lines) {
+            if (line.name.equals(departure.getLine())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -46,7 +51,8 @@ public class TrackedRoute {
         TrackedRoute otherTrackedRoute = (TrackedRoute) o;
         return Objects.equals(from, otherTrackedRoute.from) &&
                 Objects.equals(to, otherTrackedRoute.to) &&
-                Objects.equals(lines, otherTrackedRoute.lines);
+                lines.containsAll(otherTrackedRoute.lines) &&
+                otherTrackedRoute.lines.containsAll(lines);
     }
 
     @Override

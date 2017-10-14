@@ -226,6 +226,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
                 selectableLineAdapter.notifyDataSetChanged();
+                notifyModalDataChanged();
             }
 
             @Override
@@ -266,9 +267,9 @@ public class MainActivity extends AppCompatActivity {
                     if (hasBoundTracker && selectedFrom != null && selectedTo != null) {
                         List<Line> selectedLines = new ArrayList<>();
 
-                        for (SelectableLine line : availableLines) {
-                            if (line.isSelected) {
-                                selectedLines.add(line);
+                        for (SelectableLine selectableLine : availableLines) {
+                            if (selectableLine.isSelected) {
+                                selectedLines.add(selectableLine.line);
                             }
                         }
 
@@ -281,15 +282,11 @@ public class MainActivity extends AppCompatActivity {
                         );
                         listTrackedRoutes();
                     }
-                    selectedTo = null;
-                    selectedFrom = null;
-                    availableLines.clear();
+                    resetTrackNewModal();
                 })
                 .setNegativeButton(R.string.modal_cancel, (dialog, id) -> {
-                    selectedTo = null;
-                    selectedFrom = null;
-                    availableLines.clear();
                     dialog.cancel();
+                    resetTrackNewModal();
                 });
 
         Dialog dialog = builder.create();
@@ -313,8 +310,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         selectableLineAdapter = new SelectableLineAdapter(mContext, availableLines, selectableLine -> {
-            ((AlertDialog)dialog).getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
-            Toast.makeText(mContext, "Item Clicked", Toast.LENGTH_LONG).show();
+            notifyModalDataChanged();
         });
         linesListView = modalView.findViewById(R.id.modal_lines_list);
         linesListView.setAdapter(selectableLineAdapter);
@@ -322,8 +318,26 @@ public class MainActivity extends AppCompatActivity {
         return dialog;
     }
 
+    private void notifyModalDataChanged() {
+        boolean atLeastOneLineSelected = false;
+        for (SelectableLine selectableLine: availableLines) {
+            if (selectableLine.isSelected) {
+                atLeastOneLineSelected = true;
+                break;
+            }
+        }
+        if (hasBoundTracker && selectedFrom != null && selectedTo != null && atLeastOneLineSelected) {
+            ((AlertDialog)trackNewModal).getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
+        }
+        else {
+            ((AlertDialog)trackNewModal).getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+        }
+    }
+
     private void resetTrackNewModal() {
         ((AlertDialog)trackNewModal).getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+        selectedFrom = null;
+        selectedTo = null;
         fromSelector.setText("");
         toSelector.setText("");
         availableLines.clear();
