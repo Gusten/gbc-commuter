@@ -36,6 +36,7 @@ import java.util.List;
 import pub.gusten.gbgcommuter.adapters.SelectableLineAdapter;
 import pub.gusten.gbgcommuter.adapters.StopArrayAdapter;
 import pub.gusten.gbgcommuter.adapters.TrackedRouteAdapter;
+import pub.gusten.gbgcommuter.models.Line;
 import pub.gusten.gbgcommuter.models.SelectableLine;
 import pub.gusten.gbgcommuter.models.departures.Departure;
 import pub.gusten.gbgcommuter.models.Stop;
@@ -104,7 +105,6 @@ public class MainActivity extends AppCompatActivity {
     private List<Stop> availableStops;
     private Stop selectedFrom;
     private Stop selectedTo;
-    private Departure selectedDeparture;
 
     // TODO: Move this to a modal/dialog class
     private Dialog trackNewModal;
@@ -263,24 +263,32 @@ public class MainActivity extends AppCompatActivity {
 
         builder.setView(modalView)
                 .setPositiveButton(R.string.modal_save, (dialog, id) -> {
-                    if (hasBoundTracker && selectedDeparture != null && selectedFrom != null && selectedTo != null) {
+                    if (hasBoundTracker && selectedFrom != null && selectedTo != null) {
+                        List<Line> selectedLines = new ArrayList<>();
+
+                        for (SelectableLine line : availableLines) {
+                            if (line.isSelected) {
+                                selectedLines.add(line);
+                            }
+                        }
+
                         tracker.startTracking(
                             new TrackedRoute(
                                 selectedFrom,
                                 selectedTo,
-                                new ArrayList<>()
+                                selectedLines
                             )
                         );
                         listTrackedRoutes();
                     }
                     selectedTo = null;
                     selectedFrom = null;
-                    selectedDeparture = null;
+                    availableLines.clear();
                 })
                 .setNegativeButton(R.string.modal_cancel, (dialog, id) -> {
                     selectedTo = null;
                     selectedFrom = null;
-                    selectedDeparture = null;
+                    availableLines.clear();
                     dialog.cancel();
                 });
 
