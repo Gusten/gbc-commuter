@@ -53,13 +53,13 @@ public class TrackedRouteAdapter extends BaseAdapter {
         TrackedRoute trackedRoute = getItem(position);
 
         TextView lineNumber = rowView.findViewById(R.id.route_list_line);
-        lineNumber.setText(trackedRoute.line);
+        /*lineNumber.setText(trackedRoute.line);
         lineNumber.setTextColor(getColorFromHex(trackedRoute.bgColor.substring(1)));
-        lineNumber.setBackgroundColor(getColorFromHex(trackedRoute.fgColor.substring(1)));
+        lineNumber.setBackgroundColor(getColorFromHex(trackedRoute.fgColor.substring(1)));*/
 
         TextView name = rowView.findViewById(R.id.route_list_from);
-        String from = splitCamelCase(getNameWithoutArea(trackedRoute.from));
-        String to = splitCamelCase(getNameWithoutArea(trackedRoute.to));
+        String from = splitCamelCase(getNameWithoutArea(trackedRoute.getFrom().name));
+        String to = splitCamelCase(getNameWithoutArea(trackedRoute.getTo().name));
         name.setText(from + " <> " + to);
 
         // Set delete button

@@ -20,7 +20,7 @@ import org.threeten.bp.LocalTime;
 
 import pub.gusten.gbgcommuter.helpers.DateUtils;
 import pub.gusten.gbgcommuter.R;
-import pub.gusten.gbgcommuter.models.Departure;
+import pub.gusten.gbgcommuter.models.departures.Departure;
 import pub.gusten.gbgcommuter.models.NotificationAction;
 import pub.gusten.gbgcommuter.models.TrackedRoute;
 
@@ -95,8 +95,8 @@ public class NotificationService extends Service {
     public void showNotification(TrackedRoute route, boolean flipRoute, boolean dataIsFresh, boolean singleRoute) {
         RemoteViews contentView = new RemoteViews(getPackageName(), R.layout.custom_notification);
 
-        String from = getNameWithoutArea(flipRoute ? route.to : route.from);
-        String to = getNameWithoutArea(flipRoute ? route.from : route.to);
+        String from = getNameWithoutArea(flipRoute ? route.getTo().name : route.getFrom().name);
+        String to = getNameWithoutArea(flipRoute ? route.getFrom().name : route.getTo().name);
         from = splitCamelCase(from);
         to = splitCamelCase(to);
         contentView.setTextViewText(R.id.notification_route, from + "  >>  " + to);
@@ -121,7 +121,7 @@ public class NotificationService extends Service {
             LocalDateTime now = LocalDateTime.now();
 
             String timeTilDepartureText = "";
-            long minutesTilDeparture = Duration.between(now, nextDeparture.timeInstant).toMinutes();
+            long minutesTilDeparture = Duration.between(now, nextDeparture.getDepartureDateTime()).toMinutes();
             if (minutesTilDeparture <= 0) {
                 timeTilDepartureText += "<1min";
             }
@@ -130,13 +130,13 @@ public class NotificationService extends Service {
             }
 
             if (route.upComingDepartures.size() > 1) {
-                timeTilDepartureText += "  (" + Duration.between(now, route.upComingDepartures.get(1).timeInstant).toMinutes() + "min)";
+                timeTilDepartureText += "  (" + Duration.between(now, route.upComingDepartures.get(1).getDepartureDateTime()).toMinutes() + "min)";
             }
 
             contentView.setTextViewText(R.id.notification_timeTilDeparture, timeTilDepartureText);
-            contentView.setInt(R.id.notification_line, "setBackgroundColor", getColorFromHex(nextDeparture.fgColor.substring(1)));
-            contentView.setTextColor(R.id.notification_line, getColorFromHex(nextDeparture.bgColor.substring(1)));
-            contentView.setTextViewText(R.id.notification_line, nextDeparture.line);
+            contentView.setInt(R.id.notification_line, "setBackgroundColor", getColorFromHex(nextDeparture.getFgColor().substring(1)));
+            contentView.setTextColor(R.id.notification_line, getColorFromHex(nextDeparture.getBgColor().substring(1)));
+            contentView.setTextViewText(R.id.notification_line, nextDeparture.getLine());
         }
 
         // Set button actions/callbacks

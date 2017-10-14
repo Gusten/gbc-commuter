@@ -10,7 +10,7 @@ import android.widget.TextView;
 import java.util.List;
 
 import pub.gusten.gbgcommuter.R;
-import pub.gusten.gbgcommuter.models.Departure;
+import pub.gusten.gbgcommuter.models.departures.Departure;
 
 import static pub.gusten.gbgcommuter.helpers.ColorUtils.getColorFromHex;
 
@@ -45,9 +45,9 @@ public class DepartureAdapter extends BaseAdapter {
         Departure departure = getItem(position);
 
         TextView lineNumber = rowView.findViewById(R.id.modal_line_number);
-        lineNumber.setText(departure.line);
-        lineNumber.setTextColor(getColorFromHex(departure.bgColor.substring(1)));
-        lineNumber.setBackgroundColor(getColorFromHex(departure.fgColor.substring(1)));
+        lineNumber.setText(departure.getLine());
+        lineNumber.setTextColor(getColorFromHex(departure.getBgColor().substring(1)));
+        lineNumber.setBackgroundColor(getColorFromHex(departure.getFgColor().substring(1)));
 
         return rowView;
     }

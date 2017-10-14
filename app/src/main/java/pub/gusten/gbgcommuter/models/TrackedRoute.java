@@ -1,48 +1,42 @@
 package pub.gusten.gbgcommuter.models;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import pub.gusten.gbgcommuter.models.departures.Departure;
+
 public class TrackedRoute {
-    public final String from;
-    public final long fromStopId;
-    public final String to;
-    public final long toStopId;
-    public final String line;
-    public final String bgColor;
-    public final String fgColor;
+    public final List<Line> lines;
     public final List<Departure> upComingDepartures;
 
-    public TrackedRoute(String from, long fromStopId, String to, long toStopId, String line, String bgColor, String fgColor) {
+    private Stop from;
+    private Stop to;
+
+    public TrackedRoute() {
+        lines = new ArrayList<>();
+        upComingDepartures = new ArrayList<>();
+    }
+
+    public TrackedRoute(Stop from, Stop to, List<Line> lines) {
         this.from = from;
-        this.fromStopId = fromStopId;
         this.to = to;
-        this.toStopId = toStopId;
-        this.line = line;
-        this.bgColor = bgColor;
-        this.fgColor = fgColor;
+        this.lines = lines;
         this.upComingDepartures = new ArrayList<>();
     }
 
+    public Stop getFrom() {
+        return from;
+    }
 
-    public JSONObject toJsonObject() throws JSONException {
-        JSONObject jsonObj = new JSONObject();
-        jsonObj.put("from", from);
-        jsonObj.put("fromStopId", fromStopId);
-        jsonObj.put("to", to);
-        jsonObj.put("toStopId", toStopId);
-        jsonObj.put("line", line);
-        jsonObj.put("bgColor", bgColor);
-        jsonObj.put("fgColor", fgColor);
-        return jsonObj;
+    public Stop getTo() {
+        return to;
     }
 
     public boolean tracks(Departure departure) {
-        return line.equals(departure.line);
+        return lines.contains(departure.getLine());
     }
 
     @Override
@@ -52,21 +46,15 @@ public class TrackedRoute {
         TrackedRoute otherTrackedRoute = (TrackedRoute) o;
         return Objects.equals(from, otherTrackedRoute.from) &&
                 Objects.equals(to, otherTrackedRoute.to) &&
-                Objects.equals(line, otherTrackedRoute.line);
+                Objects.equals(lines, otherTrackedRoute.lines);
     }
 
     @Override
     public String toString() {
         return "TrackedRoute {" +
-                    "from = " + from +
-                    ", fromStopId = " + fromStopId +
-                    ", to = " + to +
-                    ", toStopId = " + toStopId +
-                    ", line = " + line +
-                    ", toStopId = " + toStopId +
-                    ", line = " + line +
-                    ", bgColor = " + bgColor +
-                    ", fgColor = " + fgColor +
+                    "from = { " + from.toString() + " }" +
+                    ", to = { " + to.toString() + " }" +
+                    ", lines = { " + StringUtils.join(lines, ", ") + " }" +
                     ", nr of upcoming departures = " + upComingDepartures.size() +
                 "}";
     }

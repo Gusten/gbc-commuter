@@ -37,5 +37,6 @@ dependencies {
     compile 'com.android.support:design:26.+'
     compile 'com.jakewharton.threetenabp:threetenabp:1.0.5'
     compile 'commons-lang:commons-lang:2.6'
+    compile 'com.google.code.gson:gson:2.8.2'
     testCompile 'junit:junit:4.12'
 }

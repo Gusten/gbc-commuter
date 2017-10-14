@@ -1,8 +1,5 @@
 package pub.gusten.gbgcommuter.models;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.Objects;
 
 public class Stop {
@@ -19,16 +16,6 @@ public class Stop {
         this.lat = lat;
         this.lon = lon;
         this.weight = weight;
-    }
-
-    public JSONObject toJsonObject() throws JSONException {
-        JSONObject jsonObj = new JSONObject();
-        jsonObj.put("name", name);
-        jsonObj.put("id", id);
-        jsonObj.put("lat", lat);
-        jsonObj.put("lon", lon);
-        jsonObj.put("weight", weight);
-        return jsonObj;
     }
 
     @Override

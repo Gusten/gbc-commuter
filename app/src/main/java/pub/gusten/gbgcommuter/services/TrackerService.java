@@ -21,17 +21,18 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
 import org.threeten.bp.LocalDateTime;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 import pub.gusten.gbgcommuter.receivers.ScreenActionReceiver;
-import pub.gusten.gbgcommuter.models.Departure;
+import pub.gusten.gbgcommuter.models.departures.Departure;
 import pub.gusten.gbgcommuter.models.NotificationAction;
 import pub.gusten.gbgcommuter.models.TrackedRoute;
 
@@ -40,6 +41,7 @@ public class TrackerService extends Service {
     private final String PREFS_REF = "trackerService";
     private final String PREFS_TRACKEDROUTES = "trackedRoutes";
 
+    private Gson gson;
     private BroadcastReceiver screenReceiver;
     private List<TrackedRoute> trackedRoutes;
     private int trackedRouteIndex;
@@ -97,6 +99,7 @@ public class TrackerService extends Service {
 
     @Override
     public void onCreate() {
+        gson = new Gson();
         isTracking = true;
         trackedRoutes = new ArrayList<>();
         trackedRouteIndex = 0;
@@ -104,23 +107,7 @@ public class TrackerService extends Service {
         // Fetch tracked routes from shared prefs
         SharedPreferences prefs = getSharedPreferences(PREFS_REF, MODE_PRIVATE);
         String storedJsonRoutes = prefs.getString(PREFS_TRACKEDROUTES, "[]");
-        try {
-            JSONArray tmpArray = new JSONArray(storedJsonRoutes);
-            for (int i = 0; i < tmpArray.length(); i++) {
-                JSONObject tmpObj = tmpArray.getJSONObject(i);
-                trackedRoutes.add(new TrackedRoute(
-                        tmpObj.getString("from"),
-                        tmpObj.getLong("fromStopId"),
-                        tmpObj.getString("to"),
-                        tmpObj.getLong("toStopId"),
-                        tmpObj.getString("line"),
-                        tmpObj.getString("bgColor"),
-                        tmpObj.getString("fgColor")
-                ));
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        trackedRoutes = gson.fromJson(storedJsonRoutes, new TypeToken<List<TrackedRoute>>(){}.getType());
 
         final IntentFilter intentFilter = new IntentFilter(Intent.ACTION_SCREEN_ON);
         screenReceiver = new ScreenActionReceiver();
@@ -229,18 +216,12 @@ public class TrackerService extends Service {
     }
 
     private void updateLocalStorage() {
-        JSONArray jsonArray = new JSONArray();
-        try {
-            for (TrackedRoute trackedRoute : trackedRoutes) {
-                jsonArray.put(trackedRoute.toJsonObject());
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        Type trackedRouteType = new TypeToken<List<TrackedRoute>>(){}.getType();
+        String trackedRoutesJson = gson.toJson(trackedRoutes, trackedRouteType);
 
         SharedPreferences prefs = getSharedPreferences(PREFS_REF, MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
-        editor.putString(PREFS_TRACKEDROUTES, jsonArray.toString());
+        editor.putString(PREFS_TRACKEDROUTES, trackedRoutesJson);
         editor.commit();
     }
 
@@ -255,13 +236,13 @@ public class TrackerService extends Service {
         trackedRouteIndex = (trackedRouteIndex + trackedRoutes.size()) % trackedRoutes.size();
 
         TrackedRoute route = trackedRoutes.get(trackedRouteIndex);
-        final long fromStopId = flipRoute ? route.toStopId : route.fromStopId;
-        final long toStopId = flipRoute ? route.fromStopId : route.toStopId;
+        final long fromStopId = flipRoute ? route.getTo().id : route.getFrom().id;
+        final long toStopId = flipRoute ? route.getFrom().id : route.getTo().id;
 
         // Remove departures that have already left
         LocalDateTime timeNow = LocalDateTime.now();
         for (int i = route.upComingDepartures.size() - 1; i >= 0; i--) {
-            if (timeNow.isAfter(route.upComingDepartures.get(i).timeInstant)) {
+            if (timeNow.isAfter(route.upComingDepartures.get(i).getDepartureDateTime())) {
                 route.upComingDepartures.remove(i);
             }
         }

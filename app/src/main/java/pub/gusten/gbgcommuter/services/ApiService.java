@@ -12,10 +12,8 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.gson.Gson;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.threeten.bp.Instant;
 import org.threeten.bp.LocalDateTime;
 
@@ -27,7 +25,9 @@ import java.util.Map;
 
 import pub.gusten.gbgcommuter.R;
 import pub.gusten.gbgcommuter.helpers.DateUtils;
-import pub.gusten.gbgcommuter.models.Departure;
+import pub.gusten.gbgcommuter.models.AccessTokenResponse;
+import pub.gusten.gbgcommuter.models.departures.Departure;
+import pub.gusten.gbgcommuter.models.departures.DepartureBoardResponse;
 
 public class ApiService extends Service {
 
@@ -46,6 +46,7 @@ public class ApiService extends Service {
     private String authStr;
     private String accessToken;
     private Instant tokenExpirationDate;
+    private Gson gson;
 
     @Nullable
     @Override
@@ -74,6 +75,8 @@ public class ApiService extends Service {
             @Override
             public void onRequestFailed() {}
         });
+
+        gson = new Gson();
     }
 
     @Override
@@ -88,15 +91,10 @@ public class ApiService extends Service {
             Request.Method.POST,
             tokenUrl,
             response -> {
-                try {
-                    JSONObject res = new JSONObject(response);
-                    accessToken = res.getString("access_token");
-                    tokenExpirationDate = Instant.ofEpochSecond(System.currentTimeMillis()/1000 + res.getLong("expires_in"));
-                    callback.onRequestCompleted();
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    callback.onRequestFailed();
-                }
+                AccessTokenResponse tokenResponse = gson.fromJson(response, AccessTokenResponse.class);
+                accessToken = tokenResponse.getAccessToken();
+                tokenExpirationDate = Instant.ofEpochSecond(System.currentTimeMillis()/1000 + tokenResponse.getExpiresIn());
+                callback.onRequestCompleted();
             },
             error -> callback.onRequestFailed())
         {
@@ -166,23 +164,17 @@ public class ApiService extends Service {
                 Request.Method.GET,
                 departureUrl + requestQuery,
                 response -> {
-                    try {
-                        List<Departure> departures = new ArrayList<>();
-                        JSONObject jsonObject = new JSONObject(response);
-                        JSONArray jsonArray = jsonObject.getJSONObject("DepartureBoard").getJSONArray("Departure");
-                        for (int i = 0; i < jsonArray.length(); i++) {
-                            Departure tmp = new Departure(jsonArray.getJSONObject(i));
-                            // Sometimes old objects sneaks through. Throw em away
-                            if (tmp.timeInstant.isBefore(now)) {
-                                continue;
-                            }
-                            departures.add(tmp);
+                    DepartureBoardResponse boardResponse = gson.fromJson(response, DepartureBoardResponse.class);
+
+                    List<Departure> departures = new ArrayList<>();
+                    for (Departure departure: boardResponse.getDepartures()) {
+                        // Sometimes old objects sneaks through. Throw em away
+                        if (departure.getDepartureDateTime().isBefore(now)) {
+                            continue;
                         }
-                        callback.onRequestCompleted(departures);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                        callback.onRequestFailed();
+                        departures.add(departure);
                     }
+                    callback.onRequestCompleted(departures);
                 },
                 error -> callback.onRequestFailed())
         {

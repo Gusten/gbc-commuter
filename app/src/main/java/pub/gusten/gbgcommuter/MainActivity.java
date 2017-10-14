@@ -9,9 +9,6 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.design.widget.FloatingActionButton;
@@ -28,9 +25,8 @@ import android.widget.AutoCompleteTextView;
 import android.widget.ListView;
 import android.widget.Spinner;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,7 +36,7 @@ import java.util.List;
 import pub.gusten.gbgcommuter.adapters.DepartureAdapter;
 import pub.gusten.gbgcommuter.adapters.StopArrayAdapter;
 import pub.gusten.gbgcommuter.adapters.TrackedRouteAdapter;
-import pub.gusten.gbgcommuter.models.Departure;
+import pub.gusten.gbgcommuter.models.departures.Departure;
 import pub.gusten.gbgcommuter.models.Stop;
 import pub.gusten.gbgcommuter.models.TrackedRoute;
 import pub.gusten.gbgcommuter.services.ApiService;
@@ -50,7 +46,6 @@ public class MainActivity extends AppCompatActivity {
 
     private final String PREFS_REF = "mainActivity";
     private final String PREFS_GPS_FIRST_PROMPT = "gpsPermission";
-    private final int COARSE_GPS_PERMISSION = 999;
 
     private ApiService apiService;
     private boolean hasBoundApiService;
@@ -178,7 +173,7 @@ public class MainActivity extends AppCompatActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        if (id == R.id.toggle_tracking) {
+        if (id == R.id.menu_toggle_tracking) {
             if (hasBoundTracker && tracker.isTracking()) {
                 tracker.pauseTracking();
             }
@@ -238,30 +233,21 @@ public class MainActivity extends AppCompatActivity {
 
     private List<Stop> loadAvailableStopsFromFile() {
         List<Stop> availableStops = new ArrayList<>();
+        InputStream inputStream = null;
         try {
-            InputStream inputStream = getAssets().open("locations.json");
+            inputStream = getAssets().open("locations.json");
             int size = inputStream.available();
             byte[] buffer = new byte[size];
 
             inputStream.read(buffer);
             inputStream.close();
 
-            String json = new String(buffer, "UTF-8");
-            JSONArray locations = new JSONArray(json);
+            String stopsJson = new String(buffer, "UTF-8");
 
-            for(int i = 0; i < locations.length(); i++) {
-                JSONObject tmp = locations.getJSONObject(i);
-                Stop tmpStop = new Stop(
-                    tmp.getString("name"),
-                    tmp.getLong("id"),
-                    tmp.getDouble("lat"),
-                    tmp.getDouble("lon"),
-                    tmp.getInt("weight")
-                );
-                availableStops.add(tmpStop);
-            }
-        } catch (IOException | JSONException ex) {
-            ex.printStackTrace();
+            Gson gson = new Gson();
+            availableStops = gson.fromJson(stopsJson, new TypeToken<List<Stop>>(){}.getType());
+        } catch (IOException e) {
+            e.printStackTrace();
         }
         return availableStops;
     }
@@ -276,13 +262,9 @@ public class MainActivity extends AppCompatActivity {
                     if (hasBoundTracker && selectedDeparture != null && selectedFrom != null && selectedTo != null) {
                         tracker.startTracking(
                             new TrackedRoute(
-                                selectedFrom.name,
-                                selectedFrom.id,
-                                selectedTo.name,
-                                selectedTo.id,
-                                selectedDeparture.line,
-                                selectedDeparture.bgColor,
-                                selectedDeparture.fgColor
+                                selectedFrom,
+                                selectedTo,
+                                new ArrayList<>()
                             )
                         );
                         listTrackedRoutes();
