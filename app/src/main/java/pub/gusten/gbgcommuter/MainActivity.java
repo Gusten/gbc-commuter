@@ -185,8 +185,25 @@ public class MainActivity extends AppCompatActivity {
             }
             return true;
         }
+        if (id == R.id.menu_toggle_gps) {
+            if (hasBoundTracker) {
+                tryStartLocationTracking();
+            }
+            return true;
+        }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void tryStartLocationTracking() {
+        int grantedStatus = ActivityCompat.checkSelfPermission((Activity) mContext, Manifest.permission.ACCESS_COARSE_LOCATION);
+        if (grantedStatus != PackageManager.PERMISSION_GRANTED) {
+            int permission_id = getResources().getInteger(R.integer.coarse_gps_permission);
+            ActivityCompat.requestPermissions((Activity) mContext, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, permission_id);
+        }
+        else if (grantedStatus == PackageManager.PERMISSION_GRANTED) {
+            tracker.startLocationListener();
+        }
     }
 
     private void listTrackedRoutes() {

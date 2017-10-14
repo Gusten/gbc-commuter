@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">GBG Commuter</string>
+    <string name="app_name">Fram Och Tillbaka</string>
     <string name="menu_toggle_tracking">Start/stop tracking</string>
     <string name="menu_toggle_gps">Start/stop GPS</string>
     <string name="notification_channel_id">gbgc_notification_1</string>

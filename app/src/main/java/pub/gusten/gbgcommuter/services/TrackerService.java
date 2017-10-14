@@ -207,6 +207,10 @@ public class TrackerService extends Service {
         return isTracking;
     }
 
+    public void startLocationTracking() {
+
+    }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
