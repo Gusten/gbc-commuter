@@ -5,6 +5,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.design.widget.FloatingActionButton;
@@ -152,18 +153,34 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        // If request is cancelled, the result arrays are empty.
+        if (requestCode == MY_PERMISSIONS_REQUEST_READ_CONTACTS && grantResults.length > 0
+                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+            // permission was granted, yay! Do the
+            // contacts-related task you need to do.
+
+        } else {
+
+            // permission denied, boo! Disable the
+            // functionality that depends on this permission.
+        }
+    }
+
     private void listTrackedRoutes() {
         if (!hasBoundTracker) {
             return;
         }
 
         ListView listView = (ListView) findViewById(R.id.main_tracked_routes);
-        TrackedRouteAdapter adapter = new TrackedRouteAdapter(mContext, tracker.getTrackedRoutes());
+        TrackedRouteAdapter adapter = new TrackedRouteAdapter(mContext, tracker);
         listView.setAdapter(adapter);
-        listView.setOnItemClickListener((parent, view, position, id) -> {
-            tracker.stopTracking(adapter.getItem(position));
+        /*listView.setOnItemClickListener((parent, view, position, id) -> {
             listTrackedRoutes();
-        });
+        });*/
+
         if (tracker.getTrackedRoutes().isEmpty()) {
             showTutorial();
         }
@@ -172,7 +189,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void listLines(View modal, AlertDialog dialog) {
+    private void listLines() {
         if (!hasBoundApiService || selectedTo == null || selectedFrom == null) {
             return;
         }
@@ -268,7 +285,7 @@ public class MainActivity extends AppCompatActivity {
         fromSelector.setThreshold(1);
         fromSelector.setOnItemClickListener((parent, arg1, pos, id) -> {
             selectedFrom = stopAdapter.getItem(pos);
-            listLines(modalView, (AlertDialog)dialog);
+            listLines();
         });
 
         toSelector = modalView.findViewById(R.id.modal_to);
@@ -276,7 +293,7 @@ public class MainActivity extends AppCompatActivity {
         toSelector.setThreshold(1);
         toSelector.setOnItemClickListener((parent, arg1, pos, id) -> {
             selectedTo = stopAdapter.getItem(pos);
-            listLines(modalView, (AlertDialog)dialog);
+            listLines();
         });
 
         departureAdapter = new DepartureAdapter(mContext, filteredDepartures);
