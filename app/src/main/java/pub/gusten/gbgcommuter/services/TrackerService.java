@@ -1,6 +1,7 @@
 package pub.gusten.gbgcommuter.services;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -18,6 +19,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
+import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -37,7 +39,6 @@ public class TrackerService extends Service {
 
     private final String PREFS_REF = "trackerService";
     private final String PREFS_TRACKEDROUTES = "trackedRoutes";
-    private final String PREFS_GPS_PERMISSION = "gpsPermission";
 
     private BroadcastReceiver screenReceiver;
     private List<TrackedRoute> trackedRoutes;
@@ -96,6 +97,10 @@ public class TrackerService extends Service {
 
     @Override
     public void onCreate() {
+        isTracking = true;
+        trackedRoutes = new ArrayList<>();
+        trackedRouteIndex = 0;
+
         // Fetch tracked routes from shared prefs
         SharedPreferences prefs = getSharedPreferences(PREFS_REF, MODE_PRIVATE);
         String storedJsonRoutes = prefs.getString(PREFS_TRACKEDROUTES, "[]");
@@ -117,59 +122,21 @@ public class TrackerService extends Service {
             e.printStackTrace();
         }
 
+        final IntentFilter intentFilter = new IntentFilter(Intent.ACTION_SCREEN_ON);
+        screenReceiver = new ScreenActionReceiver();
+        registerReceiver(screenReceiver, intentFilter);
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_CONTACTS}, MY_PERMISSIONS_REQUEST_READ_CONTACTS);
-
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-
-            // Make a check if the user has denied us access to coarse location.
-            // If so, respect the user's decision and do not ask again for it.
-            boolean alreadyAskedForPermission = prefs.getBoolean(PREFS_GPS_PERMISSION, false);
-            return;
+        // Are we allowed to start location tracking?
+        int grantedStatus = ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION);
+        if (grantedStatus == PackageManager.PERMISSION_GRANTED) {
+            startLocationListener();
         }
-
-        // Acquire a reference to the system Location Manager
-        LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-
-        // Define a listener that responds to location updates
-        LocationListener locationListener = new LocationListener() {
-            public void onLocationChanged(Location location) {
-                // Called when a new location is found by the network location provider.
-                // makeUseOfNewLocation(location);
-            }
-
-            public void onStatusChanged(String provider, int status, Bundle extras) {
-            }
-
-            public void onProviderEnabled(String provider) {
-            }
-
-            public void onProviderDisabled(String provider) {
-            }
-        };
-        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
 
         startService(new Intent(this, NotificationService.class));
         bindService(new Intent(this, NotificationService.class), notificationServiceConnection, BIND_AUTO_CREATE);
 
         startService(new Intent(this, ApiService.class));
         bindService(new Intent(this, ApiService.class), apiServiceConnection, BIND_AUTO_CREATE);
-
-        isTracking = true;
-
-        trackedRoutes = new ArrayList<>();
-        trackedRouteIndex = 0;
-
-        final IntentFilter intentFilter = new IntentFilter(Intent.ACTION_SCREEN_ON);
-        screenReceiver = new ScreenActionReceiver();
-        registerReceiver(screenReceiver, intentFilter);
     }
 
     @Override
@@ -325,7 +292,28 @@ public class TrackerService extends Service {
                 });
     }
 
-    private void startLocationListener() {
+    @SuppressLint("MissingPermission") // This is checked elsewhere
+    public void startLocationListener() {
+        // Acquire a reference to the system Location Manager
+        LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 
+        // Define a listener that responds to location updates
+        LocationListener locationListener = new LocationListener() {
+            public void onLocationChanged(Location location) {
+                // Called when a new location is found by the network location provider.
+                // makeUseOfNewLocation(location);
+                Log.i("Tracker", "Lon: " + location.getLongitude() + "  Lat: " + location.getLatitude());
+            }
+
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+            }
+
+            public void onProviderEnabled(String provider) {
+            }
+
+            public void onProviderDisabled(String provider) {
+            }
+        };
+        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
     }
 }

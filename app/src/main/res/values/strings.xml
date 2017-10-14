@@ -1,9 +1,9 @@
 <resources>
     <string name="app_name">GBG Commuter</string>
-    <string name="toggle_tracking">Start/stop tracking</string>
+    <string name="menu_toggle_tracking">Start/stop tracking</string>
+    <string name="menu_toggle_gps">Start/stop GPS</string>
     <string name="notification_channel_id">gbgc_notification_1</string>
     <string name="notification_channel_name">gbgc_notifications</string>
-    <integer name="notification_id">1</integer>
     <string name="modal_from_hint">From</string>
     <string name="modal_to_hint">To</string>
     <string name="modal_cancel">Cancel</string>

@@ -1,14 +1,21 @@
 package pub.gusten.gbgcommuter;
 
+import android.Manifest;
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -41,6 +48,10 @@ import pub.gusten.gbgcommuter.services.TrackerService;
 
 public class MainActivity extends AppCompatActivity {
 
+    private final String PREFS_REF = "mainActivity";
+    private final String PREFS_GPS_FIRST_PROMPT = "gpsPermission";
+    private final int COARSE_GPS_PERMISSION = 999;
+
     private ApiService apiService;
     private boolean hasBoundApiService;
     private ServiceConnection apiConnection = new ServiceConnection() {
@@ -71,6 +82,23 @@ public class MainActivity extends AppCompatActivity {
             TrackerService.LocalBinder mLocalBinder = (TrackerService.LocalBinder)service;
             tracker = mLocalBinder.getService();
             listTrackedRoutes();
+
+            // Make a check if the user has denied us access to coarse location.
+            // If so, respect the user's decision and do not ask again for it.
+            SharedPreferences prefs = getSharedPreferences(PREFS_REF, MODE_PRIVATE);
+            boolean firstTimeAsking = prefs.getBoolean(PREFS_GPS_FIRST_PROMPT, true);
+
+            int grantedStatus = ActivityCompat.checkSelfPermission((Activity) mContext, Manifest.permission.ACCESS_COARSE_LOCATION);
+            if (grantedStatus != PackageManager.PERMISSION_GRANTED && firstTimeAsking) {
+                int permission_id = getResources().getInteger(R.integer.coarse_gps_permission);
+                ActivityCompat.requestPermissions((Activity) mContext, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, permission_id);
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putBoolean(PREFS_GPS_FIRST_PROMPT, false);
+                editor.commit();
+            }
+            else if (grantedStatus == PackageManager.PERMISSION_GRANTED) {
+                tracker.startLocationListener();
+            }
         }
     };
 
@@ -121,6 +149,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        // If request is cancelled, the result arrays are empty.
+        int permission_id = getResources().getInteger(R.integer.coarse_gps_permission);
+        if (requestCode == permission_id && grantResults.length > 0
+                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            tracker.startLocationListener();
+        }
+    }
+
+    @Override
     public void onDestroy() {
         super.onDestroy();
         unbindService(trackerConnection);
@@ -151,22 +189,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-        // If request is cancelled, the result arrays are empty.
-        if (requestCode == MY_PERMISSIONS_REQUEST_READ_CONTACTS && grantResults.length > 0
-                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-            // permission was granted, yay! Do the
-            // contacts-related task you need to do.
-
-        } else {
-
-            // permission denied, boo! Disable the
-            // functionality that depends on this permission.
-        }
     }
 
     private void listTrackedRoutes() {
