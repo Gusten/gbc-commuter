@@ -33,7 +33,7 @@ public class ApiService extends Service {
 
     public interface DeparturesRequest {
         void onRequestCompleted(List<Departure> departures);
-        void onRequestFailed();
+        void onRequestFailed(String error);
     }
     private interface AccessTokenCallback {
         void onRequestCompleted();
@@ -137,7 +137,7 @@ public class ApiService extends Service {
 
                 @Override
                 public void onRequestFailed() {
-                    callback.onRequestFailed();
+                    callback.onRequestFailed("Failed fetching access token");
                 }
             });
         }
@@ -166,6 +166,12 @@ public class ApiService extends Service {
                 response -> {
                     DepartureBoardResponse boardResponse = gson.fromJson(response, DepartureBoardResponse.class);
 
+                    // Check if error
+                    if (boardResponse.hasError()) {
+                        callback.onRequestFailed(boardResponse.getErrorText());
+                        return;
+                    }
+
                     List<Departure> departures = new ArrayList<>();
                     for (Departure departure: boardResponse.getDepartures()) {
                         // Sometimes old objects sneaks through. Throw em away
@@ -176,7 +182,7 @@ public class ApiService extends Service {
                     }
                     callback.onRequestCompleted(departures);
                 },
-                error -> callback.onRequestFailed())
+                error -> callback.onRequestFailed("Could not connect to Västtrafik"))
         {
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {

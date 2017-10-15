@@ -12,4 +12,12 @@ public class DepartureBoardResponse {
     public List<Departure> getDepartures() {
         return departureBoard.getDepartures();
     }
+
+    public boolean hasError() {
+        return departureBoard.hasError();
+    }
+
+    public String getErrorText() {
+        return departureBoard.getErrorText();
+    }
 }
