@@ -3,8 +3,13 @@ package pub.gusten.gbgcommuter.models;
 import org.threeten.bp.LocalTime;
 
 public class TimeInterval {
-    public final LocalTime start;
-    public final LocalTime end;
+    public LocalTime start;
+    public LocalTime end;
+
+    public TimeInterval() {
+        start = LocalTime.of(0, 0);
+        end = LocalTime.of(23, 59);
+    }
 
     public TimeInterval(LocalTime start, LocalTime end) {
         this.start = start;

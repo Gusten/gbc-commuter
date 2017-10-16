@@ -10,6 +10,8 @@
     <string name="modal_save">Save</string>
     <string name="main_toolbar">Tracked departures</string>
     <string name="main_tutorial">Press the plus icon to start tracking your favorite departures.</string>
+    <string name="from">From</string>
+    <string name="to">To</string>
 
     <!-- Weekdays -->
     <string name="monday_short">M</string>

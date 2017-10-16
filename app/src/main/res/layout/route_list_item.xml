@@ -1,45 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="50dp">
+    android:layout_height="50dp"
+    android:descendantFocusability="blocksDescendants">
 
     <TextView
         android:id="@+id/route_list_line"
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_marginTop="5dp"
-        android:layout_marginLeft="5dp"
+        android:layout_marginStart="5dp"
         android:layout_marginBottom="5dp"
-        android:layout_marginRight="8dp"
+        android:layout_marginEnd="8dp"
         android:gravity="center"
         android:background="@color/colorPrimary"
         android:text=""
         android:textColor="@android:color/white"
-        android:textAppearance="@style/TextAppearance.AppCompat.Body2" />
+        android:textAppearance="@style/TextAppearance.AppCompat.Body2"/>
     <TextView
         android:id="@+id/route_list_from"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toRightOf="@+id/route_list_line"
+        android:layout_toEndOf="@+id/route_list_line"
         android:layout_marginTop="16dp"
         android:text=""
         android:textColor="@android:color/black"
-        android:textSize="16dp"
+        android:textSize="16sp"
         android:scrollHorizontally="true"
         android:ellipsize="end"
         android:maxLines="1"/>
-
     <ImageButton
         android:id="@+id/route_list_delete"
         android:layout_width="60dp"
         android:layout_height="40dp"
-        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
         android:layout_marginBottom="5dp"
-        android:layout_marginLeft="5dp"
-        android:layout_marginRight="8dp"
+        android:layout_marginStart="5dp"
+        android:layout_marginEnd="8dp"
         android:layout_marginTop="5dp"
         android:gravity="center"
         android:src="@drawable/ic_delete_24dp"
-        android:background="@color/colorTransparent"/>
+        android:background="@color/colorTransparent"
+        android:focusable="false"/>
 
 </RelativeLayout>

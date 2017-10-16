@@ -1,16 +1,22 @@
 package pub.gusten.gbgcommuter.models;
 
 import org.apache.commons.lang.StringUtils;
+import org.threeten.bp.DayOfWeek;
 import org.threeten.bp.LocalTime;
+import org.threeten.bp.ZonedDateTime;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import pub.gusten.gbgcommuter.models.departures.Departure;
 
 public class TrackedRoute {
     public final List<Line> lines;
+    public final Set<DayOfWeek> activeDays;
     public final List<TimeInterval> activeIntervals;
     public final List<Departure> upComingDepartures;
 
@@ -21,17 +27,29 @@ public class TrackedRoute {
         lines = new ArrayList<>();
         upComingDepartures = new ArrayList<>();
         activeIntervals = new ArrayList<>();
+        activeDays = new HashSet<>();
     }
 
-    public TrackedRoute(Stop from, Stop to, List<Line> lines, List<TimeInterval> activeIntervals) {
+    public TrackedRoute(Stop from, Stop to, List<Line> lines) {
         this.from = from;
         this.to = to;
         this.lines = lines;
-        this.activeIntervals = activeIntervals;
+        this.activeDays = new HashSet<>();
+        this.activeDays.addAll(Arrays.asList(DayOfWeek.values()));
+        this.activeIntervals = new ArrayList<>();
+        this.activeIntervals.add(new TimeInterval(LocalTime.of(0,0), LocalTime.of(23,59)));
         this.upComingDepartures = new ArrayList<>();
     }
 
     public boolean isEnabled() {
+        return insideActiveTimeInterval() && activeDays.contains(DayOfWeek.from(ZonedDateTime.now()));
+    }
+
+    private boolean insideActiveTimeInterval() {
+        if (activeIntervals.isEmpty()) {
+            return true;
+        }
+
         LocalTime now = LocalTime.now();
         for (TimeInterval interval : activeIntervals) {
             if (interval.encompass(now)) {

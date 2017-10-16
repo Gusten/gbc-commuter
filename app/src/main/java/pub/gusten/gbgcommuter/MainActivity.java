@@ -22,12 +22,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AutoCompleteTextView;
-import android.widget.ListView;
+import android.widget.ExpandableListView;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-
-import org.threeten.bp.LocalTime;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,7 +38,6 @@ import pub.gusten.gbgcommuter.adapters.TrackedRouteAdapter;
 import pub.gusten.gbgcommuter.models.Line;
 import pub.gusten.gbgcommuter.models.SelectableLine;
 import pub.gusten.gbgcommuter.models.Stop;
-import pub.gusten.gbgcommuter.models.TimeInterval;
 import pub.gusten.gbgcommuter.models.TrackedRoute;
 import pub.gusten.gbgcommuter.models.departures.Departure;
 import pub.gusten.gbgcommuter.services.ApiService;
@@ -213,12 +210,9 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        ListView listView = (ListView) findViewById(R.id.main_tracked_routes);
+        ExpandableListView listView = (ExpandableListView) findViewById(R.id.main_tracked_routes);
         TrackedRouteAdapter adapter = new TrackedRouteAdapter(mContext, tracker);
         listView.setAdapter(adapter);
-        /*listView.setOnItemClickListener((parent, view, position, id) -> {
-            listTrackedRoutes();
-        });*/
 
         if (tracker.getTrackedRoutes().isEmpty()) {
             showTutorial();
@@ -291,16 +285,13 @@ public class MainActivity extends AppCompatActivity {
                                 selectedLines.add(selectableLine.line);
                             }
                         }
-                        List<TimeInterval> tmpList = new ArrayList<>();
-                        tmpList.add(new TimeInterval(LocalTime.of(19, 7), LocalTime.of(20, 0, 30)));
 
                         tracker.startTracking(
                             getBaseContext(),
                             new TrackedRoute(
                                 selectedFrom,
                                 selectedTo,
-                                selectedLines,
-                                tmpList
+                                selectedLines
                             )
                         );
                         listTrackedRoutes();

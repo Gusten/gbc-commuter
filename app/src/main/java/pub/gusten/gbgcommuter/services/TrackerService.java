@@ -175,6 +175,11 @@ public class TrackerService extends Service {
         trackRoute();
     }
 
+    public void refreshTracking() {
+        updateLocalStorage();
+        trackRoute();
+    }
+
     public void stopTracking(TrackedRoute route) {
         for (TrackedRoute trackedRoute : trackedRoutes) {
             if (route.equals(trackedRoute)) {
@@ -241,12 +246,14 @@ public class TrackerService extends Service {
         trackedRouteIndex = (trackedRouteIndex + trackedRoutes.size()) % trackedRoutes.size();
 
         TrackedRoute route = trackedRoutes.get(trackedRouteIndex);
+        int nrOfEnabledRoutes = 0;
         boolean foundEnabledRoute = false;
         for(int i = 0; i < trackedRoutes.size(); i++) {
             int indexOffsetted = (trackedRouteIndex + i) % trackedRoutes.size();
             if (trackedRoutes.get(indexOffsetted).isEnabled()) {
                 route = trackedRoutes.get(indexOffsetted);
                 foundEnabledRoute = true;
+                nrOfEnabledRoutes++;
                 break;
             }
         }
@@ -267,6 +274,7 @@ public class TrackerService extends Service {
         toStopId = flipRoute ? route.getFrom().id : route.getTo().id;
 
         TrackedRoute finalRoute = route;
+        int finalNrOfEnabledRoutes = nrOfEnabledRoutes;
         apiService.fetchDepartures(fromStopId, toStopId,
                 new ApiService.DeparturesRequest() {
                     @Override
@@ -279,7 +287,7 @@ public class TrackerService extends Service {
                             }
                         }
 
-                        notificationService.showNotification(finalRoute, flipRoute, true, trackedRoutes.size() <= 1);
+                        notificationService.showNotification(finalRoute, flipRoute, true, finalNrOfEnabledRoutes <= 1);
                     }
 
                     @Override
@@ -292,7 +300,7 @@ public class TrackerService extends Service {
                             }
                         }
 
-                        notificationService.showNotification(finalRoute, flipRoute, false, trackedRoutes.size() <= 1);
+                        notificationService.showNotification(finalRoute, flipRoute, false, finalNrOfEnabledRoutes <= 1);
                     }
                 });
     }
