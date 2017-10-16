@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import pub.gusten.gbgcommuter.models.Stop;
 import pub.gusten.gbgcommuter.receivers.ScreenActionReceiver;
 import pub.gusten.gbgcommuter.models.departures.Departure;
 import pub.gusten.gbgcommuter.models.NotificationAction;
@@ -40,6 +41,7 @@ public class TrackerService extends Service {
 
     private final String PREFS_REF = "trackerService";
     private final String PREFS_TRACKEDROUTES = "trackedRoutes";
+    private final int MIN_GPS_UPDATE_INTERVAL = 10 * 60 * 1000; // 10 minutes
 
     private Gson gson;
     private BroadcastReceiver screenReceiver;
@@ -82,6 +84,8 @@ public class TrackerService extends Service {
     };
 
     private boolean isTracking;
+    private boolean gpsEnabled;
+    private Location lastKnownLocation;
 
     @Nullable
     @Override
@@ -116,7 +120,7 @@ public class TrackerService extends Service {
         // Are we allowed to start location tracking?
         int grantedStatus = ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION);
         if (grantedStatus == PackageManager.PERMISSION_GRANTED) {
-            startLocationListener();
+            startLocationTracking();
         }
 
         startService(new Intent(this, NotificationService.class));
@@ -147,7 +151,11 @@ public class TrackerService extends Service {
                 break;
             case FLIP:
                 flipRoute = !flipRoute;
+                // A bit ugly but make sure GPS is turned of for this one update
+                boolean tmp = gpsEnabled;
+                gpsEnabled = false;
                 trackRoute();
+                gpsEnabled = tmp;
                 break;
             case UPDATE:
                 if (!isTracking) {
@@ -207,10 +215,6 @@ public class TrackerService extends Service {
         return isTracking;
     }
 
-    public void startLocationTracking() {
-
-    }
-
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -240,16 +244,15 @@ public class TrackerService extends Service {
         trackedRouteIndex = (trackedRouteIndex + trackedRoutes.size()) % trackedRoutes.size();
 
         TrackedRoute route = trackedRoutes.get(trackedRouteIndex);
-        final long fromStopId = flipRoute ? route.getTo().id : route.getFrom().id;
-        final long toStopId = flipRoute ? route.getFrom().id : route.getTo().id;
 
-        // Remove departures that have already left
-        LocalDateTime timeNow = LocalDateTime.now();
-        for (int i = route.upComingDepartures.size() - 1; i >= 0; i--) {
-            if (timeNow.isAfter(route.upComingDepartures.get(i).getDepartureDateTime())) {
-                route.upComingDepartures.remove(i);
-            }
+        // If gps is enabled, use gps to determine which location to watch
+        long fromStopId;
+        long toStopId;
+        if (gpsEnabled && lastKnownLocation != null) {
+            flipRoute = distanceFromDeviceTo(route.getFrom()) > distanceFromDeviceTo(route.getTo());
         }
+        fromStopId = flipRoute ? route.getTo().id : route.getFrom().id;
+        toStopId = flipRoute ? route.getFrom().id : route.getTo().id;
 
         apiService.fetchDepartures(fromStopId, toStopId,
                 new ApiService.DeparturesRequest() {
@@ -267,23 +270,33 @@ public class TrackerService extends Service {
                     }
 
                     @Override
-                    public void onRequestFailed() {
+                    public void onRequestFailed(String error) {
+                        // Remove departures that have already left if we couldn't fetch new ones.
+                        LocalDateTime timeNow = LocalDateTime.now();
+                        for (int i = route.upComingDepartures.size() - 1; i >= 0; i--) {
+                            if (timeNow.isAfter(route.upComingDepartures.get(i).getDepartureDateTime())) {
+                                route.upComingDepartures.remove(i);
+                            }
+                        }
+
                         notificationService.showNotification(route, flipRoute, false, trackedRoutes.size() <= 1);
                     }
                 });
     }
 
     @SuppressLint("MissingPermission") // This is checked elsewhere
-    public void startLocationListener() {
+    public void startLocationTracking() {
+        if (gpsEnabled) {
+            return;
+        }
+
         // Acquire a reference to the system Location Manager
         LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 
         // Define a listener that responds to location updates
         LocationListener locationListener = new LocationListener() {
             public void onLocationChanged(Location location) {
-                // Called when a new location is found by the network location provider.
-                // makeUseOfNewLocation(location);
-                Log.i("Tracker", "Lon: " + location.getLongitude() + "  Lat: " + location.getLatitude());
+                lastKnownLocation = location;
             }
 
             public void onStatusChanged(String provider, int status, Bundle extras) {
@@ -295,6 +308,16 @@ public class TrackerService extends Service {
             public void onProviderDisabled(String provider) {
             }
         };
-        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
+        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, MIN_GPS_UPDATE_INTERVAL, 0, locationListener);
+        locationManager.requestSingleUpdate(LocationManager.NETWORK_PROVIDER, locationListener, null);
+        lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+        gpsEnabled = true;
+    }
+
+    private double distanceFromDeviceTo(Stop stop) {
+        double totalDistance = 0;
+        totalDistance += Math.abs(lastKnownLocation.getLatitude() - stop.lat);
+        totalDistance += Math.abs(lastKnownLocation.getLongitude() - stop.lon);
+        return totalDistance;
     }
 }

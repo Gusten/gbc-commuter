@@ -96,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
                 editor.commit();
             }
             else if (grantedStatus == PackageManager.PERMISSION_GRANTED) {
-                tracker.startLocationListener();
+                tracker.startLocationTracking();
             }
         }
     };
@@ -152,7 +152,7 @@ public class MainActivity extends AppCompatActivity {
         int permission_id = getResources().getInteger(R.integer.coarse_gps_permission);
         if (requestCode == permission_id && grantResults.length > 0
                 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            tracker.startLocationListener();
+            tracker.startLocationTracking();
         }
     }
 
@@ -196,13 +196,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void tryStartLocationTracking() {
-        int grantedStatus = ActivityCompat.checkSelfPermission((Activity) mContext, Manifest.permission.ACCESS_COARSE_LOCATION);
+        int grantedStatus = ActivityCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_COARSE_LOCATION);
         if (grantedStatus != PackageManager.PERMISSION_GRANTED) {
             int permission_id = getResources().getInteger(R.integer.coarse_gps_permission);
             ActivityCompat.requestPermissions((Activity) mContext, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, permission_id);
         }
         else if (grantedStatus == PackageManager.PERMISSION_GRANTED) {
-            tracker.startLocationListener();
+            tracker.startLocationTracking();
         }
     }
 
@@ -247,7 +247,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onRequestFailed() {
+            public void onRequestFailed(String error) {
                 selectableLineAdapter.notifyDataSetChanged();
             }
         });
