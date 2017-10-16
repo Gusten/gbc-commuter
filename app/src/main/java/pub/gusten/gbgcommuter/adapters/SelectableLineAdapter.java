@@ -12,7 +12,6 @@ import java.util.List;
 
 import pub.gusten.gbgcommuter.R;
 import pub.gusten.gbgcommuter.models.SelectableLine;
-import pub.gusten.gbgcommuter.models.departures.Departure;
 
 import static pub.gusten.gbgcommuter.helpers.ColorUtils.getColorFromHex;
 

@@ -4,5 +4,7 @@ public enum NotificationAction {
     PREVIOUS,
     NEXT,
     FLIP,
-    UPDATE
+    UPDATE,
+    ENABLE_ROUTE,
+    DISABLE_ROUTE
 }

@@ -18,11 +18,11 @@ import org.threeten.bp.Duration;
 import org.threeten.bp.LocalDateTime;
 import org.threeten.bp.LocalTime;
 
-import pub.gusten.gbgcommuter.helpers.DateUtils;
 import pub.gusten.gbgcommuter.R;
-import pub.gusten.gbgcommuter.models.departures.Departure;
+import pub.gusten.gbgcommuter.helpers.DateUtils;
 import pub.gusten.gbgcommuter.models.NotificationAction;
 import pub.gusten.gbgcommuter.models.TrackedRoute;
+import pub.gusten.gbgcommuter.models.departures.Departure;
 
 import static pub.gusten.gbgcommuter.helpers.ColorUtils.getColorFromHex;
 import static pub.gusten.gbgcommuter.helpers.TextUtils.getNameWithoutArea;

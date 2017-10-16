@@ -19,7 +19,6 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
-import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -28,14 +27,13 @@ import org.threeten.bp.LocalDateTime;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
-import pub.gusten.gbgcommuter.models.Stop;
-import pub.gusten.gbgcommuter.receivers.ScreenActionReceiver;
-import pub.gusten.gbgcommuter.models.departures.Departure;
 import pub.gusten.gbgcommuter.models.NotificationAction;
+import pub.gusten.gbgcommuter.models.Stop;
 import pub.gusten.gbgcommuter.models.TrackedRoute;
+import pub.gusten.gbgcommuter.models.departures.Departure;
+import pub.gusten.gbgcommuter.receivers.ScreenActionReceiver;
 
 public class TrackerService extends Service {
 
@@ -169,7 +167,7 @@ public class TrackerService extends Service {
         return START_STICKY;
     }
 
-    public void startTracking(TrackedRoute newRoute) {
+    public void startTracking(Context context, TrackedRoute newRoute) {
         if (!trackedRoutes.contains(newRoute)) {
             trackedRoutes.add(newRoute);
             updateLocalStorage();
@@ -240,10 +238,24 @@ public class TrackerService extends Service {
             return;
         }
 
-        isTracking = true;
         trackedRouteIndex = (trackedRouteIndex + trackedRoutes.size()) % trackedRoutes.size();
 
         TrackedRoute route = trackedRoutes.get(trackedRouteIndex);
+        boolean foundEnabledRoute = false;
+        for(int i = 0; i < trackedRoutes.size(); i++) {
+            int indexOffsetted = (trackedRouteIndex + i) % trackedRoutes.size();
+            if (trackedRoutes.get(indexOffsetted).isEnabled()) {
+                route = trackedRoutes.get(indexOffsetted);
+                foundEnabledRoute = true;
+                break;
+            }
+        }
+        if (!foundEnabledRoute) {
+            notificationService.pause();
+            return;
+        }
+
+        isTracking = true;
 
         // If gps is enabled, use gps to determine which location to watch
         long fromStopId;
@@ -254,32 +266,33 @@ public class TrackerService extends Service {
         fromStopId = flipRoute ? route.getTo().id : route.getFrom().id;
         toStopId = flipRoute ? route.getFrom().id : route.getTo().id;
 
+        TrackedRoute finalRoute = route;
         apiService.fetchDepartures(fromStopId, toStopId,
                 new ApiService.DeparturesRequest() {
                     @Override
                     public void onRequestCompleted(List<Departure> departures) {
-                        route.upComingDepartures.clear();
+                        finalRoute.upComingDepartures.clear();
 
                         for (Departure nextDeparture: departures) {
-                            if (route.tracks(nextDeparture)) {
-                                route.upComingDepartures.add(nextDeparture);
+                            if (finalRoute.tracks(nextDeparture)) {
+                                finalRoute.upComingDepartures.add(nextDeparture);
                             }
                         }
 
-                        notificationService.showNotification(route, flipRoute, true, trackedRoutes.size() <= 1);
+                        notificationService.showNotification(finalRoute, flipRoute, true, trackedRoutes.size() <= 1);
                     }
 
                     @Override
                     public void onRequestFailed(String error) {
                         // Remove departures that have already left if we couldn't fetch new ones.
                         LocalDateTime timeNow = LocalDateTime.now();
-                        for (int i = route.upComingDepartures.size() - 1; i >= 0; i--) {
-                            if (timeNow.isAfter(route.upComingDepartures.get(i).getDepartureDateTime())) {
-                                route.upComingDepartures.remove(i);
+                        for (int i = finalRoute.upComingDepartures.size() - 1; i >= 0; i--) {
+                            if (timeNow.isAfter(finalRoute.upComingDepartures.get(i).getDepartureDateTime())) {
+                                finalRoute.upComingDepartures.remove(i);
                             }
                         }
 
-                        notificationService.showNotification(route, flipRoute, false, trackedRoutes.size() <= 1);
+                        notificationService.showNotification(finalRoute, flipRoute, false, trackedRoutes.size() <= 1);
                     }
                 });
     }
