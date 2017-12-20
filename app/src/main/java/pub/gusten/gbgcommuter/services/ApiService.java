@@ -28,6 +28,8 @@ import pub.gusten.gbgcommuter.helpers.DateUtils;
 import pub.gusten.gbgcommuter.models.AccessTokenResponse;
 import pub.gusten.gbgcommuter.models.departures.Departure;
 import pub.gusten.gbgcommuter.models.departures.DepartureBoardResponse;
+import pub.gusten.gbgcommuter.models.trips.Trip;
+import pub.gusten.gbgcommuter.models.trips.TripRequestResponse;
 
 public class ApiService extends Service {
 
@@ -35,13 +37,18 @@ public class ApiService extends Service {
         void onRequestCompleted(List<Departure> departures);
         void onRequestFailed(String error);
     }
+    public interface TripRequest {
+        void onRequestCompleted(List<Trip> trips);
+        void onRequestFailed(String error);
+    }
     private interface AccessTokenCallback {
         void onRequestCompleted();
         void onRequestFailed();
     }
 
-    private final String tokenUrl = "https://api.vasttrafik.se:443/token";
-    private final String departureUrl = "https://api.vasttrafik.se/bin/rest.exe/v2/departureBoard";
+    private final String TOKEN_URL = "https://api.vasttrafik.se:443/token";
+    private final String DEPARTURE_URL = "https://api.vasttrafik.se/bin/rest.exe/v2/departureBoard";
+    private final String TRIP_URL = "https://api.vasttrafik.se/bin/rest.exe/v2/trip";
 
     private String authStr;
     private String accessToken;
@@ -89,7 +96,7 @@ public class ApiService extends Service {
 
         StringRequest stringRequest = new StringRequest(
             Request.Method.POST,
-            tokenUrl,
+                TOKEN_URL,
             response -> {
                 AccessTokenResponse tokenResponse = gson.fromJson(response, AccessTokenResponse.class);
                 accessToken = tokenResponse.getAccessToken();
@@ -162,7 +169,7 @@ public class ApiService extends Service {
 
         StringRequest stringRequest = new StringRequest(
                 Request.Method.GET,
-                departureUrl + requestQuery,
+                DEPARTURE_URL + requestQuery,
                 response -> {
                     DepartureBoardResponse boardResponse = gson.fromJson(response, DepartureBoardResponse.class);
 
@@ -181,6 +188,80 @@ public class ApiService extends Service {
                         departures.add(departure);
                     }
                     callback.onRequestCompleted(departures);
+                },
+                error -> callback.onRequestFailed("Could not connect to Västtrafik"))
+        {
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String> headers = new HashMap<>();
+                headers.put("Authorization", "Bearer " + accessToken);
+                return headers;
+            }
+        };
+        queue.add(stringRequest);
+    }
+
+    public void fetchTrips(final long fromStopId, final long toStopId, final TripRequest callback) {
+        // Check if we need to refresh access token
+        if(Instant.now().isAfter(tokenExpirationDate)) {
+            fetchAccessToken(new AccessTokenCallback() {
+                @Override
+                public void onRequestCompleted() {
+                    try {
+                        mFetchTrips(fromStopId, toStopId, true, true, true, callback);
+                    } catch (UnsupportedEncodingException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void onRequestFailed() {
+                    callback.onRequestFailed("Failed fetching access token");
+                }
+            });
+        }
+        else {
+            try {
+                mFetchTrips(fromStopId, toStopId, true, true, true,callback);
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void mFetchTrips(final long fromStopId, final long toStopId, final boolean allowTrams, final boolean allowBuses, final boolean allowBoats, final TripRequest callback) throws UnsupportedEncodingException {
+        String requestQuery =
+            "?originId=" + fromStopId +
+            "&destId=" + toStopId +
+            "&useTram=" + ((allowTrams) ? 1 : 0) +
+            "&useBus=" + ((allowBuses) ? 1 : 0) +
+            "&useBoat=" + ((allowBoats) ? 1 : 0) +
+            "&originWalk=0" +
+            "&format=json";
+
+        RequestQueue queue = Volley.newRequestQueue(this);
+
+        StringRequest stringRequest = new StringRequest(
+                Request.Method.GET,TRIP_URL + requestQuery,
+                response -> {
+                    LocalDateTime now = LocalDateTime.now();
+                    TripRequestResponse responseObj = gson.fromJson(response, TripRequestResponse.class);
+
+                    // Check if error
+                    if (responseObj.hasError()) {
+                        callback.onRequestFailed(responseObj.getErrorText());
+                        return;
+                    }
+
+                    List<Trip> trips = new ArrayList<>();
+                    for (Trip trip: responseObj.getTrips()) {
+                        // Sometimes old objects sneaks through. Throw em away
+                        if (trip.getDepartureDateTime().isBefore(now)) {
+                            continue;
+                        }
+                        trips.add(trip);
+                    }
+                    callback.onRequestCompleted(trips);
                 },
                 error -> callback.onRequestFailed("Could not connect to Västtrafik"))
         {

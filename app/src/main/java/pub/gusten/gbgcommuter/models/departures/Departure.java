@@ -7,6 +7,7 @@ import org.threeten.bp.LocalDateTime;
 import java.util.Objects;
 
 import pub.gusten.gbgcommuter.helpers.DateUtils;
+import pub.gusten.gbgcommuter.models.JourneyDetailRef;
 
 public class Departure {
     private String name;

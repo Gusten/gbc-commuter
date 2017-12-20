@@ -17,6 +17,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -40,6 +41,7 @@ import pub.gusten.gbgcommuter.models.SelectableLine;
 import pub.gusten.gbgcommuter.models.Stop;
 import pub.gusten.gbgcommuter.models.TrackedRoute;
 import pub.gusten.gbgcommuter.models.departures.Departure;
+import pub.gusten.gbgcommuter.models.trips.Trip;
 import pub.gusten.gbgcommuter.services.ApiService;
 import pub.gusten.gbgcommuter.services.TrackerService;
 
@@ -227,8 +229,10 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+        Log.d("TripInfo", "From: " + selectedFrom.id + " to: " + selectedTo.id);
+
         availableLines.clear();
-        apiService.fetchDepartures(selectedFrom.id, selectedTo.id, new ApiService.DeparturesRequest() {
+        /*apiService.fetchDepartures(selectedFrom.id, selectedTo.id, new ApiService.DeparturesRequest() {
             @Override
             public void onRequestCompleted(List<Departure> departures) {
                 // Filter out copies
@@ -237,6 +241,22 @@ public class MainActivity extends AppCompatActivity {
                     if(!availableLines.contains(tmpLine)) {
                         availableLines.add(tmpLine);
                     }
+                }
+                selectableLineAdapter.notifyDataSetChanged();
+                notifyModalDataChanged();
+            }
+
+            @Override
+            public void onRequestFailed(String error) {
+                selectableLineAdapter.notifyDataSetChanged();
+            }
+        });*/
+        apiService.fetchTrips(selectedFrom.id, selectedTo.id, new ApiService.TripRequest() {
+            @Override
+            public void onRequestCompleted(List<Trip> trips) {
+                // Filter out copies
+                for (Trip trip : trips) {
+                    Log.d("Trips", trip.toString());
                 }
                 selectableLineAdapter.notifyDataSetChanged();
                 notifyModalDataChanged();
